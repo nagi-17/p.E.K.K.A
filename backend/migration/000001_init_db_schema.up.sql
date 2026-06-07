@@ -60,7 +60,7 @@ CREATE TABLE defense_building_data(
 CREATE TABLE resource_building_data(
     building_data_id int PRIMARY KEY REFERENCES building_data(id) ON DELETE CASCADE,
     elixir_gen_per_min int NOT NULL,
-    pancake_gen_per_min int NOT NULL,
+    pancakes_gen_per_min int NOT NULL,
     max_possible_upgrade_level int NOT NULL,
     unlock_town_hall_level int DEFAULT 1
 );
