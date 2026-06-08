@@ -22,7 +22,8 @@ CREATE TABLE building_data(
     upgrade_cost_elixir int DEFAULT 0,
     upgrade_cost_pancakes int DEFAULT 0,
     upgrade_time int NOT NULL,
-    max_quantity_available int NOT NULL
+    max_quantity_available int NOT NULL,
+    skill_on_upgrade int NOT NULL
 );
 CREATE UNIQUE INDEX idx_building_data_type_level ON building_data (building_type, building_level);
 
