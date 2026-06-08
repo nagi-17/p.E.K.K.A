@@ -1,13 +1,2 @@
-DROP TABLE IF EXISTS battle_log;
-DROP TABLE IF EXISTS player_troop_level;
-DROP TABLE IF EXISTS owned_building;
-DROP TABLE IF EXISTS trained_troop;
-DROP TABLE IF EXISTS laboratory_data;
-DROP TABLE IF EXISTS storage_building_data;
-DROP TABLE IF EXISTS resource_building_data;
-DROP TABLE IF EXISTS defense_building_data;
-DROP TABLE IF EXISTS town_hall_data;
-DROP TABLE IF EXISTS building_data;
-DROP TABLE IF EXISTS troop_data;
 DROP TABLE IF EXISTS player_info;
 DROP TABLE IF EXISTS login_info;
