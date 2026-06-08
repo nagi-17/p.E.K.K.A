@@ -8,7 +8,6 @@ CREATE TABLE login_info(
 
 CREATE TABLE player_info(
     player_id UUID PRIMARY KEY REFERENCES login_info(id) ON DELETE CASCADE,
-    player_tag VARCHAR(20) UNIQUE NOT NULL,
     trophies int NOT NULL DEFAULT 0,
     skill_points int NOT NULL DEFAULT 0,
     elixir int NOT NULL DEFAULT 0,
