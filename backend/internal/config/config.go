@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	Port      string
-	DBHost    string
+	DB_URL    string
 	JWTSecret string
 }
 
@@ -20,12 +20,12 @@ func LoadConfig() *Config {
 	}
 
 	server_port := os.Getenv("SERVER_PORT")
-	db_host := os.Getenv("DB_HOST")
+	db_url := os.Getenv("DB_URL")
 	jwt_secret := os.Getenv("JWT_SECRET")
 
 	return &Config{
 		Port:      server_port,
-		DBHost:    db_host,
+		DB_URL:    db_url,
 		JWTSecret: jwt_secret,
 	}
 }
