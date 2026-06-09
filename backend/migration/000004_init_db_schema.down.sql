@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS battle_log
+DROP TABLE IF EXISTS battle_log;
