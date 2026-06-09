@@ -1,20 +1,85 @@
 package models
 
-import "time"
+import (
+	"context"
+	"fmt"
+	"time"
 
-type Login_info struct {
-	ID            string    `json:"id"`
-	Username      string    `json:"username"`
-	Email         string    `json:"email"`
-	Password_Hash string    `json:"-"`
-	Created_At    time.Time `json:"created_at"`
+	"github.com/google/uuid"
+	"github.com/nagi-17/p.E.K.K.A/internal/database"
+)
+
+type LoginInfo struct {
+	ID            uuid.UUID `db:"id"`
+	Username      string    `db:"username"`
+	Email         string    `db:"email"`
+	Password_Hash string    `db:"password_hash"`
+	Created_At    time.Time `db:"created_at"`
 }
 
-type Player_info struct {
-	Player_ID       string     `json:"player_id"`
-	Trophies        int        `json:"trophies"`
-	Skill_points    int        `json:"skill_points"`
-	Elixir          int        `json:"elixir"`
-	Pancakes        int        `json:"pancakes"`
-	Shield_End_Time *time.Time `json:"sheild_end_at"`
+type PlayerInfo struct {
+	Player_ID       uuid.UUID  `db:"player_id"`
+	Trophies        int        `db:"trophies"`
+	Skill_points    int        `db:"skill_points"`
+	Elixir          int        `db:"elixir"`
+	Pancakes        int        `db:"pancakes"`
+	Shield_End_Time *time.Time `db:"shield_end_time"`
+}
+
+func RegisterNewPlayer(ctx context.Context, username string, email string, pass_hash string) (string, error) {
+	tx, err := database.DB.Begin(ctx)
+	if err != nil {
+		return "", fmt.Errorf("Failed to begin databse transaction: %w", err)
+	}
+
+	defer tx.Rollback(ctx)
+
+	login_info_query := `
+		INSERT INTO login_info (username, email, password_hash)
+		VALUES ($1, $2, $3)
+		RETURNING id;
+	`
+
+	var player_ID uuid.UUID
+	err = tx.QueryRow(ctx, login_info_query, username, email, pass_hash).Scan(&player_ID)
+	if err != nil {
+		return "", fmt.Errorf("Failed to register user: %w", err)
+	}
+
+	player_info_query := `
+		INSERT INTO player_info (player_id, trophies, skill_points, elixir, pancakes, shield_end_time)
+		VALUES ($1, $2, $3, $4, $5, $6);
+	`
+
+	var init_trophies int = 0
+	var init_skill_points int = 0
+	var init_elixir int = 1000
+	var init_pancakes int = 1000
+	var init_shield_time *time.Time = nil
+	_, err = tx.Exec(ctx, player_info_query, player_ID, init_trophies, init_skill_points, init_elixir, init_pancakes, init_shield_time)
+	if err != nil {
+		return "", fmt.Errorf("Error in loading initial player data: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return "", fmt.Errorf("Failed to commit to database: %w", err)
+	}
+	return player_ID.String(), nil
+}
+
+func GetLoginInfoUsingUsername(ctx context.Context, username string) (*LoginInfo, error) {
+	query := `
+		SELECT id, username, email, password_hash, created_at 
+		FROM login_info
+		WHERE username = $1
+		`
+
+	var info LoginInfo
+	err := database.DB.QueryRow(ctx, query, username).Scan(&info.ID, &info.Username, &info.Email, &info.Password_Hash, &info.Created_At)
+	if err != nil {
+		return nil, fmt.Errorf("Error in fetching user data: %w", err)
+	}
+
+	return &info, nil
 }
