@@ -83,3 +83,17 @@ func GetLoginInfoUsingUsername(ctx context.Context, username string) (*LoginInfo
 
 	return &info, nil
 }
+
+func GetPlayerInfoByID(ctx context.Context, playerID uuid.UUID) (*PlayerInfo, error) {
+	query := `
+	SELECT player_id, trophies, skill_points, elixir, pancakes, shield_end_time
+	FROM player_info
+	WHERE player_id=$1
+	`
+	var info PlayerInfo
+	err := database.DB.QueryRow(ctx, query, playerID).Scan(&info.Player_ID, &info.Trophies, &info.Skill_points, &info.Elixir, &info.Pancakes, &info.Shield_End_Time)
+	if err != nil {
+		return nil, fmt.Errorf("Error in fetching user stats: %w", err)
+	}
+	return &info, nil
+}
