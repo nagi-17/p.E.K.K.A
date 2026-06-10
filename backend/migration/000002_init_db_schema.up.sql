@@ -3,11 +3,15 @@ CREATE TABLE troop_data(
     troop_type VARCHAR(50) NOT NULL,
     troop_level int DEFAULT 1 NOT NULL,
     health int NOT NULL,
-    damage int NOT NULL,
+    dps int NOT NULL,
+    dpa int NOT NULL,
     troop_range int NOT NULL,
-    training_cost_elixir int NOT NULL,
+    upgrade_cost_elixir int NOT NULL,
     space_occupied_in_army int NOT NULL,
-    speed int NOT NULL
+    mov_speed int NOT NULL,
+    attack_speed int NOT NULL,
+    lab_level_req int NOT NULL,
+    airborne boolean NOT NULL DEFAULT FALSE
 );
 CREATE UNIQUE INDEX idx_troop_data_type_level ON troop_data (troop_type, troop_level);
 
@@ -35,7 +39,8 @@ CREATE TABLE town_hall_data(
 CREATE TABLE defense_building_data(
     building_data_id int PRIMARY KEY REFERENCES building_data(id) ON DELETE CASCADE,
     building_range int NOT NULL,
-    damage int NOT NULL,
+    damage_per_sec int NOT NULL,
+    damage_per_shot int NOT NULL,
     max_possible_upgrade_level int NOT NULL,
     unlock_town_hall_level int NOT NULL
 );
