@@ -63,6 +63,6 @@ CREATE TABLE storage_building_data(
 CREATE TABLE laboratory_data(
     building_data_id int PRIMARY KEY REFERENCES building_data(id) ON DELETE CASCADE,
     max_troop_upgrade_level int NOT NULL,
-    unlock_town_hall_level int NOT NULL,
-    max_possible_upgrade_level int NOT NULL
+    max_possible_upgrade_level int NOT NULL,
+    unlock_town_hall_level int NOT NULL
 );
