@@ -62,6 +62,25 @@ func RegisterNewPlayer(ctx context.Context, username string, email string, pass_
 		return "", fmt.Errorf("Error in loading initial player data: %w", err)
 	}
 
+	var thDataID int
+	query := `SELECT id FROM building_data WHERE building_type = 'Town Hall' AND building_level = 1`
+
+	err = tx.QueryRow(ctx, query).Scan(&thDataID)
+	if err != nil {
+		return "", fmt.Errorf("Cannot find Level 1 Town Hall in db: %w", err)
+	}
+
+	insertTHquery := `INSERT INTO owned_building (id, player_id, building_data_id, pos_x, pos_y, upgrade_complete_at, last_collected_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	thID := uuid.New()
+	var instantBuildth *time.Time = nil
+	var noCollect *time.Time = nil
+
+	_, err = tx.Exec(ctx, insertTHquery, thID, player_ID, thDataID, 20, 20, instantBuildth, noCollect)
+	if err != nil {
+		return "", fmt.Errorf("Failed to place default town hall: %w", err)
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		return "", fmt.Errorf("Failed to commit to database: %w", err)
@@ -116,14 +135,38 @@ func GetPlayerTownHallLevel(ctx context.Context, playerID uuid.UUID) (int, error
 }
 
 func UpdateResources(ctx context.Context, tx pgx.Tx, playerID uuid.UUID, newPancakes int, newElixir int) error {
+
+	maxElixir, maxPancakes, err := GetPlayerStorageCapacity(ctx, playerID)
+	if err != nil {
+		return err
+	}
+	if newElixir > maxElixir {
+		newElixir = maxElixir
+	}
+	if newPancakes > maxPancakes {
+		newPancakes = maxPancakes
+	}
+
 	query := `
 	UPDATE player_info
 	SET elixir = $1, pancakes = $2
 	WHERE player_id = $3
 	`
-	_, err := tx.Exec(ctx, query, newElixir, newPancakes, playerID)
+	_, err = tx.Exec(ctx, query, newElixir, newPancakes, playerID)
 	if err != nil {
 		return fmt.Errorf("Error in updating resources")
 	}
+	return nil
+}
+
+func AddSkill(ctx context.Context, tx pgx.Tx, playerID uuid.UUID, newSkill int) error {
+
+	query := `UPDATE player_info SET skill_points = $1 WHERE player_id = $2`
+	_, err := tx.Exec(ctx, query, newSkill, playerID)
+
+	if err != nil {
+		return fmt.Errorf("Error in adding skill: %w", err)
+	}
+
 	return nil
 }

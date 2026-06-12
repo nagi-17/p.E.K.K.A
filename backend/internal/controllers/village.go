@@ -20,6 +20,14 @@ type MoveBuildingReq struct {
 	New_y      int    `json:"new_y"`
 }
 
+type UpgradeBuildingReq struct {
+	BuildingID string `json:"building_id"`
+}
+
+type Response struct {
+	Message string `json:"message"`
+}
+
 func LoadVillage(w http.ResponseWriter, request *http.Request) {
 	val := request.Context().Value("player_id")
 	checkPlayerIDStr, ok := val.(string)
@@ -74,9 +82,12 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	var res Response
+	res.Message = "Building placed successfully"
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode("Building placed successfully")
+	json.NewEncoder(w).Encode(res)
 }
 
 func MoveBuildingHandler(w http.ResponseWriter, request *http.Request) {
@@ -113,7 +124,76 @@ func MoveBuildingHandler(w http.ResponseWriter, request *http.Request) {
 		}
 		http.Error(w, "Failed to move building-int. server error", http.StatusInternalServerError)
 	}
+
+	var res Response
+	res.Message = "Building moved successfully"
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("Building moved successfully")
+	json.NewEncoder(w).Encode(res)
+}
+
+func StartUpgradeHandler(w http.ResponseWriter, request *http.Request) {
+	val := request.Context().Value("player_id")
+	_, ok := val.(string)
+	if !ok {
+		http.Error(w, "Player ID missing or is invalid in context", http.StatusInternalServerError)
+		return
+	}
+
+	var req UpgradeBuildingReq
+	err := json.NewDecoder(request.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Bad request-invalid json payload", http.StatusBadRequest)
+		return
+	}
+
+	buildingUUID, err := uuid.Parse(req.BuildingID)
+	if err != nil {
+		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+	}
+
+	err = models.StartUpgrade(request.Context(), buildingUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+	}
+
+	var res Response
+	res.Message = "Upgrade started successfully"
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
+
+func FinishUpgradeHandler(w http.ResponseWriter, request *http.Request) {
+	val := request.Context().Value("player_id")
+	_, ok := val.(string)
+	if !ok {
+		http.Error(w, "Player ID missing or is invalid in context", http.StatusInternalServerError)
+		return
+	}
+
+	var req UpgradeBuildingReq
+	err := json.NewDecoder(request.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Bad request-invalid json payload", http.StatusBadRequest)
+	}
+
+	buildingUUID, err := uuid.Parse(req.BuildingID)
+	if err != nil {
+		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+	}
+
+	err = models.FinishUpgrade(request.Context(), buildingUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+	}
+
+	var res Response
+	res.Message = "Building upgraded successfully"
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
 }
