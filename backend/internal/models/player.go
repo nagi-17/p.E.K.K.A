@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
 )
 
@@ -96,4 +97,33 @@ func GetPlayerInfoByID(ctx context.Context, playerID uuid.UUID) (*PlayerInfo, er
 		return nil, fmt.Errorf("Error in fetching user stats: %w", err)
 	}
 	return &info, nil
+}
+
+func GetPlayerTownHallLevel(ctx context.Context, playerID uuid.UUID) (int, error) {
+	query := `
+	SELECT bd.building_level
+	FROM owned_building ob
+	INNER JOIN building_data bd ON ob.building_data_id = bd.id
+	WHERE ob.player_id = $1 AND bd.building_type = 'Town Hall'
+	LIMIT 1
+	`
+	var level int
+	err := database.DB.QueryRow(ctx, query, playerID).Scan(&level)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to fetch Town Hall level")
+	}
+	return level, nil
+}
+
+func UpdateResources(ctx context.Context, tx pgx.Tx, playerID uuid.UUID, newPancakes int, newElixir int) error {
+	query := `
+	UPDATE player_info
+	SET elixir = $1, pancakes = $2
+	WHERE player_id = $3
+	`
+	_, err := tx.Exec(ctx, query, newElixir, newPancakes, playerID)
+	if err != nil {
+		return fmt.Errorf("Error in updating resources")
+	}
+	return nil
 }

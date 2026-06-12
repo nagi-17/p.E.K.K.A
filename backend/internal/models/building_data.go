@@ -213,3 +213,23 @@ func GetLabData(ctx context.Context, bType string, level int) (*LaboratoryData, 
 	}
 	return &labData, nil
 }
+
+func GetBuildingDataByTypeLevel(ctx context.Context, buildingType string, level int) (*BuildingData, error) {
+	query := `
+	SELECT id, building_type, building_level, health, width, height,
+	build_time, upgrade_cost_elixir, upgrade_cost_pancakes, upgrade_time,
+	max_quantity_available, skill_on_upgrade
+	FROM building_data
+	WHERE building_type = $1 AND building_level = $2
+	`
+
+	var bData BuildingData
+	err := database.DB.QueryRow(ctx, query, buildingType, level).Scan(&bData.ID, &bData.BuildingType, &bData.BuildingLevel, &bData.Health,
+		&bData.Width, &bData.Height, &bData.BuildTime, &bData.UpgradeCostElixir,
+		&bData.UpgradeCostPancakes, &bData.UpgradeTime, &bData.MaxQuantityAvailable,
+		&bData.SkillOnUpgrade)
+	if err != nil {
+		return nil, fmt.Errorf("Error in fetching building (static)data: %w", err)
+	}
+	return &bData, nil
+}
