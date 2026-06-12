@@ -14,6 +14,16 @@ func InitRouter() *chi.Mux {
 
 	router.Group(func(protectedRoutes chi.Router) {
 		protectedRoutes.Use(middleware.VerifyJWT)
+
+		protectedRoutes.Get("/user/load", controllers.LoadPlayerInfo)
+
+		protectedRoutes.Get("/village", controllers.LoadVillage)
+		protectedRoutes.Post("/village/build", controllers.PlaceBuilding)
+		protectedRoutes.Put("/village/move", controllers.MoveBuildingHandler)
+
+		protectedRoutes.Post("/village/upgrade/start", controllers.StartUpgradeHandler)
+		protectedRoutes.Post("/village/upgrade/finish", controllers.FinishUpgradeHandler)
+		protectedRoutes.Post("/village/collect", controllers.CollectResourceHandler)
 	})
 
 	return router
