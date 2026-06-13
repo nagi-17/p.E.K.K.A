@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS amry_camp_data;
