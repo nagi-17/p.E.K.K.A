@@ -139,12 +139,11 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 
 	var id uuid.UUID = uuid.New()
 	var upgrade_complete_at *time.Time = nil
-	var last_collected_at *time.Time = nil
 	if bData.BuildTime > 0 {
 		finishTime := time.Now().Add(bData.BuildTime)
 		upgrade_complete_at = &finishTime
 	}
-	_, err = tx.Exec(ctx, query, id, playerID, bData.ID, x, y, upgrade_complete_at, last_collected_at)
+	_, err = tx.Exec(ctx, query, id, playerID, bData.ID, x, y, upgrade_complete_at, upgrade_complete_at)
 	if err != nil {
 		return fmt.Errorf("Error in placing new building: %w", err)
 	}
