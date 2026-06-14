@@ -10,18 +10,18 @@ import (
 )
 
 type BuildingData struct {
-	ID                   int           `db:"id"`
-	BuildingType         string        `db:"building_type"`
-	BuildingLevel        int           `db:"building_level"`
-	Health               int           `db:"health"`
-	Width                int           `db:"width"`
-	Height               int           `db:"height"`
-	BuildTime            time.Duration `db:"build_time"`
-	UpgradeCostElixir    int           `db:"upgrade_cost_elixir"`
-	UpgradeCostPancakes  int           `db:"upgrade_cost_pancakes"`
-	UpgradeTime          time.Duration `db:"upgrade_time"`
-	MaxQuantityAvailable int           `db:"max_quantity_available"`
-	SkillOnUpgrade       int           `db:"skill_on_upgrade"`
+	ID                   int    `db:"id"`
+	BuildingType         string `db:"building_type"`
+	BuildingLevel        int    `db:"building_level"`
+	Health               int    `db:"health"`
+	Width                int    `db:"width"`
+	Height               int    `db:"height"`
+	BuildTime            int    `db:"build_time"`
+	UpgradeCostElixir    int    `db:"upgrade_cost_elixir"`
+	UpgradeCostPancakes  int    `db:"upgrade_cost_pancakes"`
+	UpgradeTime          int    `db:"upgrade_time"`
+	MaxQuantityAvailable int    `db:"max_quantity_available"`
+	SkillOnUpgrade       int    `db:"skill_on_upgrade"`
 }
 
 type OwnedBuildingData struct {
