@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS amry_camp_data;
+DROP TABLE IF EXISTS army_camp_data;
