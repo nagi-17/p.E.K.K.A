@@ -138,12 +138,15 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 	`
 
 	var id uuid.UUID = uuid.New()
-	var upgrade_complete_at *time.Time = nil
+	currTime := time.Now()
+	var upgrade_complete_at *time.Time = &currTime
+	var last_collected_at *time.Time = &currTime
 	if bData.BuildTime > 0 {
-		finishTime := time.Now().Add(bData.BuildTime)
+		finishTime := time.Now().Add(time.Duration(bData.BuildTime) * time.Second)
 		upgrade_complete_at = &finishTime
+		last_collected_at = upgrade_complete_at
 	}
-	_, err = tx.Exec(ctx, query, id, playerID, bData.ID, x, y, upgrade_complete_at, upgrade_complete_at)
+	_, err = tx.Exec(ctx, query, id, playerID, bData.ID, x, y, upgrade_complete_at, last_collected_at)
 	if err != nil {
 		return fmt.Errorf("Error in placing new building: %w", err)
 	}
@@ -325,7 +328,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	defer tx.Rollback(ctx)
 
 	query2 := `UPDATE owned_building SET upgrade_complete_at = $1 WHERE owned_building.id = $2`
-	finishTime := time.Now().Add(bData.UpgradeTime)
+	finishTime := time.Now().Add(time.Duration(bData.UpgradeTime) * time.Second)
 
 	_, err = tx.Exec(ctx, query2, finishTime, ownedBuildingID)
 	if err != nil {
@@ -503,8 +506,7 @@ func GetPlayerStorageCapacity(ctx context.Context, playerID uuid.UUID) (int, int
 	SELECT bd.building_type, sd.max_storage FROM owned_building ob
 	INNER JOIN building_data bd ON ob.building_data_id = bd.id
 	INNER JOIN storage_building_data sd ON sd.building_data_id = bd.id
-	WHERE ob.player_id = $1 AND ob.upgrade_complete_at = NULL
-	`
+	WHERE ob.player_id = $1`
 
 	rows, err := database.DB.Query(ctx, query, playerID)
 	if err != nil {
