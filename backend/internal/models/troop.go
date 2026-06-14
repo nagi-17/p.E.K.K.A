@@ -90,6 +90,13 @@ func StartTroopUpgrade(ctx context.Context, playerID string, troopType string) e
 		return fmt.Errorf("Error in fetching player troop data: %w", err)
 	}
 
+	if playerTroopInfo.UpgradeCompleteAt != nil && !playerTroopInfo.UpgradeCompleteAt.After(time.Now()) {
+		err = FinishTroopUpgrade(ctx, playerID, troopType)
+		if err != nil {
+			return err
+		}
+	}
+
 	if playerTroopInfo.UpgradeCompleteAt != nil && playerTroopInfo.UpgradeCompleteAt.After(time.Now()) {
 		return fmt.Errorf("Upgrade is already in progress")
 	}
