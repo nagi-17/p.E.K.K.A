@@ -81,6 +81,33 @@ func RegisterNewPlayer(ctx context.Context, username string, email string, pass_
 		return "", fmt.Errorf("Failed to place default town hall: %w", err)
 	}
 
+	troopQuery := `INSERT INTO player_troop_level (player_id, troop_type, current_level, upgrade_complete_at) 
+	VALUES ($1, $2, $3, $4)`
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Barbarian", 1, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("Error in adding barbarian to player troop data: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Archer", 1, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("Error in adding archer to player troop data: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Giant", 1, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("Error in adding giant to player troop data: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Goblin", 1, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("Error in adding goblin to player troop data: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "P.E.K.K.A", 1, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("Error in adding pekka to player troop data: %w", err)
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		return "", fmt.Errorf("Failed to commit to database: %w", err)
