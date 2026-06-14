@@ -9,6 +9,8 @@ import (
 func InitRouter() *chi.Mux {
 	router := chi.NewRouter()
 
+	//router.Use(middleware.EnableCORS)
+
 	router.Post("/register", controllers.Register)
 	router.Post("/login", controllers.Login)
 
@@ -24,6 +26,10 @@ func InitRouter() *chi.Mux {
 		protectedRoutes.Post("/village/upgrade/start", controllers.StartUpgradeHandler)
 		protectedRoutes.Post("/village/upgrade/finish", controllers.FinishUpgradeHandler)
 		protectedRoutes.Post("/village/collect", controllers.CollectResourceHandler)
+
+		protectedRoutes.Post("/village/lab/troop/upgrade/start", controllers.StartTroopUpgrade)
+		protectedRoutes.Post("/village/lab/troop/upgrade/finish", controllers.FinishTroopUpgrade)
+		protectedRoutes.Post("/village/army/train", controllers.TrainArmy)
 	})
 
 	return router
