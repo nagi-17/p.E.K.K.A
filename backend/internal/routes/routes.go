@@ -9,7 +9,7 @@ import (
 func InitRouter() *chi.Mux {
 	router := chi.NewRouter()
 
-	//router.Use(middleware.EnableCORS)
+	router.Use(middleware.EnableCORS)
 
 	router.Post("/register", controllers.Register)
 	router.Post("/login", controllers.Login)
