@@ -30,6 +30,9 @@ func InitRouter() *chi.Mux {
 		protectedRoutes.Post("/village/lab/troop/upgrade/start", controllers.StartTroopUpgrade)
 		protectedRoutes.Post("/village/lab/troop/upgrade/finish", controllers.FinishTroopUpgrade)
 		protectedRoutes.Post("/village/army/train", controllers.TrainArmy)
+
+		protectedRoutes.Get("/battle/matchmake", controllers.MatchMakeHandler)
+		protectedRoutes.Post("/battle/attack", controllers.AttackHandler)
 	})
 
 	return router
