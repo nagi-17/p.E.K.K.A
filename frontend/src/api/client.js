@@ -1,8 +1,8 @@
-const DATABASE_URL='http://localhost:8080';
+const SERVER_URL='http://localhost:8080';
 
-export async function apiClient(path, query) {
-    if (query===undefined) {
-        query={};
+export async function apiClient(path, options) {
+    if (options===undefined) {
+        options={};
     }
 
     const token=localStorage.getItem('user_jwt');
@@ -11,14 +11,14 @@ export async function apiClient(path, query) {
     if (token!==null) {
         headers['Authorization']='Bearer '+token;
     }
-    if (query.headers!==undefined) {
-        for (const key in query.headers) {
-            headers[key]=query.headers[key];
+    if (options.headers!==undefined) {
+        for (const key in options.headers) {
+            headers[key]=options.headers[key];
         }
     }
-    query.headers=headers
+    options.headers=headers
 
-    const response=await fetch(DATABASE_URL+path, query);
+    const response=await fetch(SERVER_URL+path, options);
 
     if (!response.ok) {
         let errorData={};
