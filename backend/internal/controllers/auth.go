@@ -42,8 +42,8 @@ func generateJWT(player_ID string) (string, error) {
 	jwtConfig := config.LoadConfig()
 
 	mapClaims := jwt.MapClaims{
-		"player_id":  player_ID,
-		"expiration": time.Now().Add(time.Hour * 24).Unix(),
+		"player_id": player_ID,
+		"exp":       time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, mapClaims)
