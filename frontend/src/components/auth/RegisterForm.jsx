@@ -19,7 +19,7 @@ export default function RegisterForm() {
         setError(null);
 
         try {
-            const data=await regUser(username, pass);
+            const data=await regUser(username, email, pass);
             if (data.token!==undefined) {
                 login(data.token, data.player_id);
                 navigate('/');
@@ -46,7 +46,7 @@ export default function RegisterForm() {
         <form onSubmit={handleSubmit} style={styles.form}>
             <h2>Register</h2>
             {errMsg}
-            <input type="username" placeholder="Username" value={username} onChange={handleUsernameChange} style={styles.input} required></input>
+            <input type="text" placeholder="Username" value={username} onChange={handleUsernameChange} style={styles.input} required></input>
             <input type="email" placeholder="email" value={email} onChange={handleEmailChange} style={styles.input} required></input>
             <input type="password" placeholder="Password" value={pass} onChange={handlePassChange} style={styles.input} required></input>
             <button type="submit" style={styles.button}>Create Account</button>
