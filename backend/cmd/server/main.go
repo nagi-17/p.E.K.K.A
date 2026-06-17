@@ -14,6 +14,8 @@ func main() {
 
 	database.Initialise_DB(config_data.DB_URL)
 
+	database.SeedDatabase(database.DB)
+
 	log.Printf("Server starting on port: %s\n", config_data.Port)
 	router := routes.InitRouter()
 
