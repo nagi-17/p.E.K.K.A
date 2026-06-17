@@ -21,7 +21,7 @@ export default function RegisterForm() {
         try {
             const data=await regUser(username, pass);
             if (data.token!==undefined) {
-                login(data.token, data.playerID);
+                login(data.token, data.player_id);
                 navigate('/');
             }
             else {

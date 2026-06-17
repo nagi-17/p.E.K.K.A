@@ -19,7 +19,7 @@ export default function LoginForm() {
 
         try {
             const data=await loginUser(username, pass);
-            login(data.token, data.playerID);
+            login(data.token, data.player_id);
             navigate('/');
         }
         catch(err) {
