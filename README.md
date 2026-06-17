@@ -1,3 +1,1 @@
-# p.E.K.K.A
-
-Status: Currently working on middleware and then will work on seed file. Mostly done with register and login part.  
+Current status : Currently working on frontend (pixiJS). Some part of battle logic is still left on the backend side and testing of some handlers is also left.
