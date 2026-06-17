@@ -20,16 +20,19 @@ func CollectResourceHandler(w http.ResponseWriter, request *http.Request) {
 	err := json.NewDecoder(request.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Bad request-invalid json payload", http.StatusBadRequest)
+		return
 	}
 
 	buildingUUID, err := uuid.Parse(req.BuildingID)
 	if err != nil {
 		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+		return
 	}
 
 	err = models.CollectResource(request.Context(), buildingUUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
+		return
 	}
 
 	var res Response

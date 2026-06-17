@@ -45,6 +45,7 @@ func LoadVillage(w http.ResponseWriter, request *http.Request) {
 	buildings, err := models.GetOwnedBuildingData(request.Context(), playerIDuuid)
 	if err != nil {
 		http.Error(w, "Couldn't load village(owned buildings)", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -68,9 +69,11 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 	err = decoder.Decode(&req)
 	if err != nil {
 		http.Error(w, "Bad request-wrong json payload", http.StatusBadRequest)
+		return
 	}
 	if req.X < 0 || req.Y < 0 {
 		http.Error(w, "Invalid building coordinates", http.StatusBadRequest)
+		return
 	}
 	err = models.PlaceNewBuilding(request.Context(), playerIDuuid, req.Btype, req.X, req.Y)
 	if err != nil {
@@ -80,6 +83,7 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 		default:
 			http.Error(w, "Failed to place building-internal server error", http.StatusInternalServerError)
 		}
+		return
 	}
 
 	var res Response
@@ -103,26 +107,32 @@ func MoveBuildingHandler(w http.ResponseWriter, request *http.Request) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		http.Error(w, "Bad request-wrong json payload", http.StatusBadRequest)
+		return
 	}
 
 	if req.New_x < 0 || req.New_y < 0 {
 		http.Error(w, "Invalid building coordinates", http.StatusBadRequest)
+		return
 	}
 	if req.BuildingID == "" {
 		http.Error(w, "Buidling id missing", http.StatusBadRequest)
+		return
 	}
 
 	buildingUUID, err := uuid.Parse(req.BuildingID)
 	if err != nil {
 		http.Error(w, "Failed to parse building id", http.StatusBadRequest)
+		return
 	}
 
 	err = models.MoveBuilding(request.Context(), buildingUUID, req.New_x, req.New_y)
 	if err != nil {
 		if err.Error() == "Cell is occupied" {
 			http.Error(w, "Cell is occupied", http.StatusConflict)
+			return
 		}
 		http.Error(w, "Failed to move building-int. server error", http.StatusInternalServerError)
+		return
 	}
 
 	var res Response
@@ -151,11 +161,13 @@ func StartUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 	buildingUUID, err := uuid.Parse(req.BuildingID)
 	if err != nil {
 		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+		return
 	}
 
 	err = models.StartUpgrade(request.Context(), buildingUUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
+		return
 	}
 
 	var res Response
@@ -178,16 +190,19 @@ func FinishUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 	err := json.NewDecoder(request.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Bad request-invalid json payload", http.StatusBadRequest)
+		return
 	}
 
 	buildingUUID, err := uuid.Parse(req.BuildingID)
 	if err != nil {
 		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+		return
 	}
 
 	err = models.FinishUpgrade(request.Context(), buildingUUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
+		return
 	}
 
 	var res Response
