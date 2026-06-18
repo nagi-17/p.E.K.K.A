@@ -1,5 +1,4 @@
 import LoginForm from '../components/auth/LoginForm'
-import loginbg from '../assets/login.jpg'
 import { useState } from 'react';
 import RegisterForm from '../components/auth/RegisterForm';
 
@@ -29,7 +28,7 @@ const styles={
         margin: 0,
         fontFamily: '"Luckiest Guy", cursive',
         fontSize: '1.5rem',
-        backgroundImage: `url(${loginbg})`,
+        backgroundImage: 'url(login.jpg)',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
         backgroundSize: 'cover',

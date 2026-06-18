@@ -37,7 +37,7 @@ export default function LoginForm() {
 
     return (
         <form onSubmit={handleSubmit} style={styles.form}>
-            <h2>Login</h2>
+            <h2>Login to p.E.K.K.A</h2>
             {errMsg}
             <input type="text" placeholder="Username" value={username} onChange={handleUsernameChange} style={styles.input} required></input>
             <input type="password" placeholder="Password" value={pass} onChange={handlePassChnage} style={styles.input} required></input>
