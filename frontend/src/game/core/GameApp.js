@@ -36,7 +36,7 @@ export class GameApp {
 
     destroy() {
         if (this.app) {
-            this.app.destroy(true, {children: true, texture: true, baseTexture: true});
+            this.app.destroy(true, {children: true});
         }
     }
 }

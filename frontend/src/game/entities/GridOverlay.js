@@ -19,13 +19,14 @@ export class GridOverlay {
 
         for (let i=0; i<=GRID_WIDTH; i++) {
             const x=i*TILE_SIZE;
-            this.graphics.moveTo(x, 0).lineTo(x, base_height).stroke(lineStroke);
+            this.graphics.moveTo(x, 0).lineTo(x, base_height);
         }
         for (let j=0; j<=GRID_HEIGHT; j++) {
             const y=j*TILE_SIZE;
-            this.graphics.moveTo(0, y).lineTo(base_width, y).stroke(lineStroke);
+            this.graphics.moveTo(0, y).lineTo(base_width, y);
         }
 
+        this.graphics.stroke({ width: 2, color: 0xffffff, alpha: 0.6 });
         this.graphics.rect(0, 0, base_width, base_height).stroke({width: 6, color: 0xff0000});
     }
 }

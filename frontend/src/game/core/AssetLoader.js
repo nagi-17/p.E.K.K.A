@@ -1,5 +1,5 @@
 import { Assets } from 'pixi.js';
-import { BUILDING_MAP } from '../interactions/gameConfig';
+import { BUILDING_MAP } from '../gameConfig';
 
 export class AssetLoader {
     static async loadAssets() {

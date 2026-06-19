@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { gameConfig, BUILDING_MAP } from '../interactions/gameConfig';
+import { gameConfig, BUILDING_MAP } from '../gameConfig';
 import { AssetLoader } from '../core/AssetLoader';
 
 export class BuildingSprite {
@@ -8,8 +8,12 @@ export class BuildingSprite {
         this.typeAlias=BUILDING_MAP[buildingData.BuildingDataID];
         this.container=new PIXI.Container();
         
-        const texture=AssetLoader.getTexture(this.typeAlias);
-        const pixelSize=gameConfig.TILE_SIZE * 3; 
+        let texture=null;
+        const pixelSize=gameConfig.TILE_SIZE * 3;
+
+        if (this.typeAlias) {
+            texture = AssetLoader.getTexture(this.typeAlias);
+        }
 
         if (texture) {
             this.sprite=new PIXI.Sprite(texture);
