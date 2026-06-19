@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useVillage } from '../../hooks/useVillage';
 import { GameApp } from '../../game/core/GameApp';
+import { useVillageStore } from '../../store/villageStore';
 
 export default function VillageCanvas() {
     const canvasRef=useRef(null);
     const gameAppRef=useRef(null);
     const {loading, error}=useVillage();
+    const buildings=useVillageStore(function(state){
+        return state.buildings;
+    });
 
     useEffect(()=>{
         let isMounted=true;
@@ -18,6 +22,7 @@ export default function VillageCanvas() {
                 if (isMounted) {
                     game.mount(canvasRef.current);
                     gameAppRef.current=game;
+                    game.scene.loadVillage(buildings);
                 }
                 else {
                     game.destroy();
@@ -34,6 +39,12 @@ export default function VillageCanvas() {
             }
         };
     }, [loading]);
+
+    useEffect(() => {
+        if (gameAppRef.current && gameAppRef.current.scene && !loading) {
+            gameAppRef.current.scene.loadVillage(buildings);
+        }
+    }, [buildings, loading]);
 
     if (loading) {
         return <div style={styles.temp_text}>Loading Village</div>;
