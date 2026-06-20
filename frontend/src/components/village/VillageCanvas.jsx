@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useVillage } from '../../hooks/useVillage';
+import { useGameInit } from '../../hooks/useGameInit';
 import { GameApp } from '../../game/core/GameApp';
 import { useVillageStore } from '../../store/villageStore';
 
 export default function VillageCanvas() {
     const canvasRef=useRef(null);
     const gameAppRef=useRef(null);
-    const {loading, error}=useVillage();
+    const {loading, error}=useGameInit();
     const buildings=useVillageStore(function(state){
         return state.buildings;
     });
@@ -32,7 +32,7 @@ export default function VillageCanvas() {
 
         initGame();
         return ()=>{
-            isMounted = false;
+            isMounted=false;
             if (gameAppRef.current) {
                 gameAppRef.current.destroy();
                 gameAppRef.current=null;
@@ -56,7 +56,7 @@ export default function VillageCanvas() {
     return <div ref={canvasRef} style={styles.canvasContainer}></div>;
 }
 
-const styles = {
+const styles={
     canvasContainer: { 
         width: '100%', 
         height: '100%', 
