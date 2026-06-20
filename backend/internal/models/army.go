@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
@@ -103,6 +104,90 @@ func TrainArmy(ctx context.Context, playerID string, troopType string, quantity 
 	_, err = database.DB.Exec(ctx, query5, id, playerUUID, trainTroopID, quantity)
 	if err != nil {
 		return fmt.Errorf("Failed to add troops to army: %w", err)
+	}
+
+	return nil
+}
+
+type TrainedTroopStatus struct {
+	TroopType         string     `json:"troop_type"`
+	CurrentLevel      int        `json:"level"`
+	Quantity          int        `json:"quantity"`
+	UpgradeCompleteAt *time.Time `json:"upgrade_complete_at"`
+}
+
+func GetTrainedArmy(ctx context.Context, playerID string) ([]TrainedTroopStatus, error) {
+	playerUUID, err := uuid.Parse(playerID)
+	if err != nil {
+		return nil, fmt.Errorf("Error in parsing player id: %w", err)
+	}
+
+	query := `
+		SELECT ptl.troop_type, ptl.current_level, ptl.upgrade_complete_at, COALESCE(tt.quantity, 0) as quantity
+		FROM player_troop_level ptl
+		LEFT JOIN troop_data td ON td.troop_type = ptl.troop_type AND td.troop_level = ptl.current_level
+		LEFT JOIN trained_troop tt ON tt.player_id = ptl.player_id AND tt.troop_data_id = td.id
+		WHERE ptl.player_id = $1
+		ORDER BY ptl.troop_type;
+	`
+	rows, err := database.DB.Query(ctx, query, playerUUID)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying trained army: %w", err)
+	}
+	defer rows.Close()
+
+	var army []TrainedTroopStatus
+	for rows.Next() {
+		var t TrainedTroopStatus
+		err = rows.Scan(&t.TroopType, &t.CurrentLevel, &t.UpgradeCompleteAt, &t.Quantity)
+		if err != nil {
+			return nil, fmt.Errorf("Error scanning trained troop status: %w", err)
+		}
+		army = append(army, t)
+	}
+	return army, nil
+}
+
+func DiscardTroops(ctx context.Context, playerID string, troopType string, quantity int) error {
+	playerUUID, err := uuid.Parse(playerID)
+	if err != nil {
+		return fmt.Errorf("Error in parsing player id: %w", err)
+	}
+
+	playerTroopInfo, err := GetPlayerTroopLevel(ctx, playerID, troopType)
+	if err != nil {
+		return fmt.Errorf("Error fetching player troop level: %w", err)
+	}
+
+	var troopDataID int
+	query1 := `SELECT id FROM troop_data WHERE troop_type = $1 AND troop_level = $2`
+	err = database.DB.QueryRow(ctx, query1, troopType, playerTroopInfo.CurrentLevel).Scan(&troopDataID)
+	if err != nil {
+		return fmt.Errorf("Error fetching specified troop stats: %w", err)
+	}
+
+	var currentQuantity int
+	query2 := `SELECT quantity FROM trained_troop WHERE player_id = $1 AND troop_data_id = $2`
+	err = database.DB.QueryRow(ctx, query2, playerUUID, troopDataID).Scan(&currentQuantity)
+	if err != nil {
+		return fmt.Errorf("No troops of this type trained")
+	}
+
+	if currentQuantity < quantity {
+		return fmt.Errorf("Cannot discard more troops than you have trained")
+	}
+
+	newQuantity := currentQuantity - quantity
+	if newQuantity == 0 {
+		query3 := `DELETE FROM trained_troop WHERE player_id = $1 AND troop_data_id = $2`
+		_, err = database.DB.Exec(ctx, query3, playerUUID, troopDataID)
+	} else {
+		query3 := `UPDATE trained_troop SET quantity = $1 WHERE player_id = $2 AND troop_data_id = $3`
+		_, err = database.DB.Exec(ctx, query3, newQuantity, playerUUID, troopDataID)
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to discard troops: %w", err)
 	}
 
 	return nil
