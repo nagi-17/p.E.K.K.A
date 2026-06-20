@@ -19,12 +19,15 @@ type LoginInfo struct {
 }
 
 type PlayerInfo struct {
-	Player_ID       uuid.UUID  `db:"player_id"`
-	Trophies        int        `db:"trophies"`
-	Skill_points    int        `db:"skill_points"`
-	Elixir          int        `db:"elixir"`
-	Pancakes        int        `db:"pancakes"`
-	Shield_End_Time *time.Time `db:"shield_end_time"`
+	Player_ID       uuid.UUID  `db:"player_id" json:"player_id"`
+	Trophies        int        `db:"trophies" json:"trophies"`
+	Skill_points    int        `db:"skill_points" json:"skill_points"`
+	Elixir          int        `db:"elixir" json:"elixir"`
+	Pancakes        int        `db:"pancakes" json:"pancakes"`
+	Shield_End_Time *time.Time `db:"shield_end_time" json:"shield_end_time"`
+	Username        string     `json:"username"`
+	MaxElixir       int        `json:"max_elixir"`
+	MaxPancakes     int        `json:"max_pancakes"`
 }
 
 func RegisterNewPlayer(ctx context.Context, username string, email string, pass_hash string) (string, error) {
@@ -83,27 +86,27 @@ func RegisterNewPlayer(ctx context.Context, username string, email string, pass_
 
 	troopQuery := `INSERT INTO player_troop_level (player_id, troop_type, current_level, upgrade_complete_at) 
 	VALUES ($1, $2, $3, $4)`
-	_, err = tx.Exec(ctx, troopQuery, player_ID, "Barbarian", 1, time.Now())
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Barbarian", 1, nil)
 	if err != nil {
 		return "", fmt.Errorf("Error in adding barbarian to player troop data: %w", err)
 	}
 
-	_, err = tx.Exec(ctx, troopQuery, player_ID, "Archer", 1, time.Now())
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Archer", 1, nil)
 	if err != nil {
 		return "", fmt.Errorf("Error in adding archer to player troop data: %w", err)
 	}
 
-	_, err = tx.Exec(ctx, troopQuery, player_ID, "Giant", 1, time.Now())
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Giant", 1, nil)
 	if err != nil {
 		return "", fmt.Errorf("Error in adding giant to player troop data: %w", err)
 	}
 
-	_, err = tx.Exec(ctx, troopQuery, player_ID, "Goblin", 1, time.Now())
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "Goblin", 1, nil)
 	if err != nil {
 		return "", fmt.Errorf("Error in adding goblin to player troop data: %w", err)
 	}
 
-	_, err = tx.Exec(ctx, troopQuery, player_ID, "P.E.K.K.A", 1, time.Now())
+	_, err = tx.Exec(ctx, troopQuery, player_ID, "P.E.K.K.A", 1, nil)
 	if err != nil {
 		return "", fmt.Errorf("Error in adding pekka to player troop data: %w", err)
 	}
@@ -133,15 +136,29 @@ func GetLoginInfoUsingUsername(ctx context.Context, username string) (*LoginInfo
 
 func GetPlayerInfoByID(ctx context.Context, playerID uuid.UUID) (*PlayerInfo, error) {
 	query := `
-	SELECT player_id, trophies, skill_points, elixir, pancakes, shield_end_time
-	FROM player_info
-	WHERE player_id=$1
+		SELECT p.player_id, p.trophies, p.skill_points, p.elixir, p.pancakes, p.shield_end_time, l.username
+		FROM player_info p
+		INNER JOIN login_info l ON p.player_id = l.id
+		WHERE p.player_id = $1
 	`
+
 	var info PlayerInfo
-	err := database.DB.QueryRow(ctx, query, playerID).Scan(&info.Player_ID, &info.Trophies, &info.Skill_points, &info.Elixir, &info.Pancakes, &info.Shield_End_Time)
+	err := database.DB.QueryRow(ctx, query, playerID).Scan(
+		&info.Player_ID, &info.Trophies, &info.Skill_points, &info.Elixir, &info.Pancakes, &info.Shield_End_Time, &info.Username,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("Error in fetching user stats: %w", err)
 	}
+
+	maxElixir, maxPancakes, err := GetPlayerStorageCapacity(ctx, playerID)
+	if err == nil {
+		info.MaxElixir = maxElixir
+		info.MaxPancakes = maxPancakes
+	} else {
+		info.MaxElixir = 1500
+		info.MaxPancakes = 1500
+	}
+
 	return &info, nil
 }
 

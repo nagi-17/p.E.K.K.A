@@ -36,7 +36,12 @@ func LoadVillage(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	playerIDuuid, err := uuid.Parse(checkPlayerIDStr)
+	playerID_string := request.URL.Query().Get("player_id")
+	if playerID_string == "" {
+		playerID_string = checkPlayerIDStr
+	}
+
+	playerIDuuid, err := uuid.Parse(playerID_string)
 	if err != nil {
 		http.Error(w, "Player ID conversion failed", http.StatusBadRequest)
 		return
