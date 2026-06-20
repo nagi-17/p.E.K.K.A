@@ -1,9 +1,15 @@
+import { useUiStore } from "../../store/uiStore";
+import { useNavigate } from "react-router-dom";
+
 export default function BottomNav() {
+    const toggleShop=useUiStore((state) => state.toggleShop);
+    const toggleArmy=useUiStore((state) => state.toggleArmy);
+    const navigate=useNavigate();
     return (
         <div style={styles.bottomNav}>
-            <button style={styles.navButton}>Shop</button>
-            <button style={styles.navButton}>Train Army</button>
-            <button style={styles.navButton}>Attack</button>
+            <button style={styles.navButton} onClick={toggleShop}>Shop</button>
+            <button style={styles.navButton} onClick={toggleArmy}>Train Army</button>
+            <button style={styles.navButton} onClick={() => navigate('/battle')}>Attack</button>
         </div>
     );
 }
