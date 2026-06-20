@@ -28,7 +28,7 @@ const styles={
         margin: 0,
         fontFamily: '"Luckiest Guy", cursive',
         fontSize: '1.5rem',
-        backgroundImage: 'url(login.jpg)',
+        backgroundImage: 'url(/login.jpg)',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
         backgroundSize: 'cover',
