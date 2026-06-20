@@ -8,8 +8,8 @@ export function createViewport(app, parentDOMElement) {
     const viewport=new Viewport({
         screenWidth: parentDOMElement.clientWidth,
         screenHeight: parentDOMElement.clientHeight,
-        base_width: base_width,
-        base_height: base_height,
+        worldWidth: base_width,
+        worldHeight: base_height,
         events: app.renderer.events
     });
 
