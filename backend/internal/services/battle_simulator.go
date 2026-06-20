@@ -28,7 +28,7 @@ type troopUnit struct {
 func distance(x1, y1, x2, y2 float64) float64 {
 	return math.Sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 }
-func SimulateBattle(army []models.AttackingTroop, defenses []models.DefenseSnapshot) float32 {
+func SimulateBattle(army []models.AttackingTroop, defenses []models.DefenseSnapshot, dropX, dropY float64) float32 {
 	if len(defenses) == 0 {
 		return 100
 	}
@@ -36,8 +36,27 @@ func SimulateBattle(army []models.AttackingTroop, defenses []models.DefenseSnaps
 	var units []troopUnit
 	for i := 0; i < len(army); i++ {
 		for j := 0; j < army[i].Quantity; j++ {
-			//need to change defualt drop position of troops from (0,0) to (x,y) and defualt speed of troops
-			units = append(units, troopUnit{health: army[i].Health, dps: army[i].DPS, posX: 0.0, posY: 0.0, troopRange: float64(army[i].TroopRange), speed: 1.0})
+			var speed float64 = 2.0
+			switch army[i].TroopType {
+			case "Barbarian":
+				speed = 2.0
+			case "Archer":
+				speed = 3.0
+			case "Giant":
+				speed = 1.5
+			case "Goblin":
+				speed = 4.0
+			case "P.E.K.K.A":
+				speed = 2.0
+			}
+			units = append(units, troopUnit{
+				health:     army[i].Health,
+				dps:        army[i].DPS,
+				posX:       dropX,
+				posY:       dropY,
+				troopRange: float64(army[i].TroopRange),
+				speed:      speed,
+			})
 		}
 	}
 	if len(units) == 0 {
@@ -177,7 +196,7 @@ func CalculateLoot(damagePercent float32, defenderElixir int, defenderPancakes i
 	return elixirLooted, pancakesLooted
 }
 
-func Attack(ctx context.Context, attackerID string, defenderID string) (*models.BattleLog, error) {
+func Attack(ctx context.Context, attackerID string, defenderID string, dropX float64, dropY float64) (*models.BattleLog, error) {
 	attackerUUID, err := uuid.Parse(attackerID)
 	if err != nil {
 		return nil, fmt.Errorf("Error in parsing attacker id: %w", err)
@@ -216,7 +235,7 @@ func Attack(ctx context.Context, attackerID string, defenderID string) (*models.
 		return nil, fmt.Errorf("Failed to load defender's village: %w", err)
 	}
 
-	damagePercent := SimulateBattle(army, defenses)
+	damagePercent := SimulateBattle(army, defenses, dropX, dropY)
 	elixirLooted, pancakesLooted := CalculateLoot(damagePercent, defenderStats.Elixir, defenderStats.Pancakes)
 
 	attackerWon := damagePercent >= 50

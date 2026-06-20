@@ -9,7 +9,9 @@ import (
 )
 
 type AttackRequest struct {
-	DefenderID string `json:"defender_id"`
+	DefenderID string  `json:"defender_id"`
+	DropX      float64 `json:"drop_x"`
+	DropY      float64 `json:"drop_y"`
 }
 
 func MatchMakeHandler(w http.ResponseWriter, request *http.Request) {
@@ -52,7 +54,7 @@ func AttackHandler(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	battleLog, err := services.Attack(request.Context(), playerID, req.DefenderID)
+	battleLog, err := services.Attack(request.Context(), playerID, req.DefenderID, req.DropX, req.DropY)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
