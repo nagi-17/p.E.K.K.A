@@ -70,6 +70,13 @@ type LaboratoryData struct {
 	UnlockTownHallLevel     int `db:"unlock_town_hall_level"`
 }
 
+type ArmyCampData struct {
+	BuildingData
+	HousingSpace            int `db:"housing_space"`
+	MaxPossibleUpgradeLevel int `db:"max_possible_upgrade_level"`
+	UnlockTownHallLevel     int `db:"unlock_town_hall_level"`
+}
+
 type OwnedBuildingWithData struct {
 	OwnedBuildingData
 	BuildingType         string        `db:"building_type"`
@@ -232,4 +239,26 @@ func GetBuildingDataByTypeLevel(ctx context.Context, buildingType string, level 
 		return nil, fmt.Errorf("Error in fetching building (static)data: %w", err)
 	}
 	return &bData, nil
+}
+
+func GetArmyCampData(ctx context.Context, bType string, level int) (*ArmyCampData, error) {
+	query := `
+	SELECT b.id, b.building_type, b.building_level, b.health,
+	b.width, b.height, b.build_time, b.upgrade_cost_elixir,
+	b.upgrade_cost_pancakes, b.upgrade_time, b.max_quantity_available,
+	b.skill_on_upgrade, a.housing_space,
+	a.max_possible_upgrade_level, a.unlock_town_hall_level
+	FROM building_data b
+	JOIN army_camp_data a ON a.building_data_id = b.id
+	WHERE b.building_type = $1 AND b.building_level = $2
+	`
+	var campData ArmyCampData
+	err := database.DB.QueryRow(ctx, query, bType, level).Scan(&campData.BuildingData.ID, &campData.BuildingData.BuildingType, &campData.BuildingData.BuildingLevel,
+		&campData.BuildingData.Health, &campData.BuildingData.Width, &campData.BuildingData.Height, &campData.BuildingData.BuildTime, &campData.BuildingData.UpgradeCostElixir,
+		&campData.BuildingData.UpgradeCostPancakes, &campData.BuildingData.UpgradeTime, &campData.BuildingData.MaxQuantityAvailable, &campData.BuildingData.SkillOnUpgrade,
+		&campData.HousingSpace, &campData.MaxPossibleUpgradeLevel, &campData.UnlockTownHallLevel)
+	if err != nil {
+		return nil, fmt.Errorf("Error in fetching army camp data: %w", err)
+	}
+	return &campData, nil
 }

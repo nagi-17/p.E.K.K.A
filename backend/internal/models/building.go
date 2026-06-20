@@ -89,6 +89,14 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 		if townHallLevel < labData.UnlockTownHallLevel {
 			return fmt.Errorf("Town Hall is under levelled")
 		}
+	case "Army Camp":
+		campData, err := GetArmyCampData(ctx, bType, bData.BuildingLevel)
+		if err != nil {
+			return err
+		}
+		if townHallLevel < campData.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall is under levelled")
+		}
 	default:
 		return fmt.Errorf("Invalid building type")
 	}
@@ -138,13 +146,19 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 	`
 
 	var id uuid.UUID = uuid.New()
-	currTime := time.Now()
-	var upgrade_complete_at *time.Time = &currTime
-	var last_collected_at *time.Time = &currTime
+	var upgrade_complete_at *time.Time = nil
+	var last_collected_at *time.Time = nil
+
 	if bData.BuildTime > 0 {
 		finishTime := time.Now().Add(time.Duration(bData.BuildTime) * time.Second)
 		upgrade_complete_at = &finishTime
-		last_collected_at = upgrade_complete_at
+		sentinel := time.Unix(0, 0)
+		last_collected_at = &sentinel
+	} else {
+		if bType == "Elixir Collector" || bType == "Pancake Machine" {
+			currTime := time.Now()
+			last_collected_at = &currTime
+		}
 	}
 	_, err = tx.Exec(ctx, query, id, playerID, bData.ID, x, y, upgrade_complete_at, last_collected_at)
 	if err != nil {
@@ -319,6 +333,15 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
 			return fmt.Errorf("Building is already maxed out")
 		}
+	case "Army Camp":
+		x, err := GetArmyCampData(ctx, bData.BuildingType, bData.BuildingLevel)
+		if err != nil {
+			return fmt.Errorf("Can't fetch army camp stats: %w", err)
+		}
+
+		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
+			return fmt.Errorf("Building is already maxed out")
+		}
 	}
 
 	tx, err := database.DB.Begin(ctx)
@@ -352,7 +375,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 
 func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	query1 := `
-	SELECT ob.player_id, ob.upgrade_complete_at, bd.building_type, bd.building_level, bd.skill_on_upgrade
+	SELECT ob.player_id, ob.upgrade_complete_at, bd.building_type, bd.building_level, bd.skill_on_upgrade, ob.last_collected_at
 	FROM owned_building ob
 	INNER JOIN building_data bd ON ob.building_data_id = bd.id
 	WHERE ob.id = $1
@@ -362,7 +385,8 @@ func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	var bType string
 	var currLevel int
 	var skillGain int
-	err := database.DB.QueryRow(ctx, query1, ownedBuildingID).Scan(&playerID, &upgradeCompleteAt, &bType, &currLevel, &skillGain)
+	var lastCollectedAt *time.Time
+	err := database.DB.QueryRow(ctx, query1, ownedBuildingID).Scan(&playerID, &upgradeCompleteAt, &bType, &currLevel, &skillGain, &lastCollectedAt)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch building: %w", err)
 	}
@@ -374,7 +398,13 @@ func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		return fmt.Errorf("Upgrade is still going on")
 	}
 
-	upgradedLevel := currLevel + 1
+	isInitialPlacement := lastCollectedAt != nil && lastCollectedAt.Unix() == 0
+
+	upgradedLevel := currLevel
+	if !isInitialPlacement {
+		upgradedLevel = currLevel + 1
+	}
+
 	upgradedBData, err := GetBuildingDataByTypeLevel(ctx, bType, upgradedLevel)
 	if err != nil {
 		return fmt.Errorf("Failed to find data of upgraded building: %w", err)
@@ -386,8 +416,18 @@ func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	}
 	defer tx.Rollback(ctx)
 
-	query2 := `UPDATE owned_building SET building_data_id = $1, upgrade_complete_at = NULL WHERE id = $2`
-	_, err = tx.Exec(ctx, query2, upgradedBData.ID, ownedBuildingID)
+	var newLastCollected *time.Time = nil
+	if isInitialPlacement {
+		if bType == "Elixir Collector" || bType == "Pancake Machine" {
+			nowTime := time.Now()
+			newLastCollected = &nowTime
+		}
+	} else {
+		newLastCollected = lastCollectedAt
+	}
+
+	query2 := `UPDATE owned_building SET building_data_id = $1, upgrade_complete_at = NULL, last_collected_at = $2 WHERE id = $3`
+	_, err = tx.Exec(ctx, query2, upgradedBData.ID, newLastCollected, ownedBuildingID)
 	if err != nil {
 		return fmt.Errorf("Error in updating owned building data: %w", err)
 	}
