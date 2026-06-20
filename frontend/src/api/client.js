@@ -21,12 +21,19 @@ export async function apiClient(path, options) {
     const response=await fetch(SERVER_URL+path, options);
 
     if (!response.ok) {
-        let errorData={};
+        let errorMessage = `API request failed with status ${response.status}`;
         try {
-            errorData=await response.json();
-        }
-        catch(err){}
-        throw new Error(errorData.message||'API request failed');
+            const bodyText = await response.text();
+            try {
+                const errorData = JSON.parse(bodyText);
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch {
+                if (bodyText && bodyText.trim()) {
+                    errorMessage = bodyText.trim();
+                }
+            }
+        } catch (err) {}
+        throw new Error(errorMessage);
     }
 
     return response.json();
