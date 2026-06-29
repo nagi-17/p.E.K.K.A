@@ -25,6 +25,7 @@ func InitRouter() *chi.Mux {
 
 		protectedRoutes.Post("/village/upgrade/start", controllers.StartUpgradeHandler)
 		protectedRoutes.Post("/village/upgrade/finish", controllers.FinishUpgradeHandler)
+		protectedRoutes.Post("/village/upgrade/cancel", controllers.CancelUpgradeHandler)
 		protectedRoutes.Post("/village/collect", controllers.CollectResourceHandler)
 
 		protectedRoutes.Post("/village/lab/troop/upgrade/start", controllers.StartTroopUpgrade)

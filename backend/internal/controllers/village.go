@@ -217,3 +217,38 @@ func FinishUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
+
+func CancelUpgradeHandler(w http.ResponseWriter, request *http.Request) {
+	val := request.Context().Value("player_id")
+	_, ok := val.(string)
+	if !ok {
+		http.Error(w, "Player ID missing or is invalid in context", http.StatusInternalServerError)
+		return
+	}
+
+	var req UpgradeBuildingReq
+	err := json.NewDecoder(request.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Bad request-invalid json payload", http.StatusBadRequest)
+		return
+	}
+
+	buildingUUID, err := uuid.Parse(req.BuildingID)
+	if err != nil {
+		http.Error(w, "Can't parse building id", http.StatusBadRequest)
+		return
+	}
+
+	err = models.CancelUpgrade(request.Context(), buildingUUID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+
+	var res Response
+	res.Message = "Upgrade cancelled successfully"
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}

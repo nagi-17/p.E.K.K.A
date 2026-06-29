@@ -10,6 +10,23 @@ import (
 )
 
 func GetOwnedBuildingData(ctx context.Context, playerID uuid.UUID) ([]OwnedBuildingWithData, error) {
+	checkQuery := `SELECT id FROM owned_building WHERE player_id = $1 AND upgrade_complete_at IS NOT NULL AND upgrade_complete_at <= NOW()`
+	rowsCheck, err := database.DB.Query(ctx, checkQuery, playerID)
+	if err == nil {
+		var completedIDs []uuid.UUID
+		for rowsCheck.Next() {
+			var id uuid.UUID
+			if errScan := rowsCheck.Scan(&id); errScan == nil {
+				completedIDs = append(completedIDs, id)
+			}
+		}
+		rowsCheck.Close()
+
+		for _, bID := range completedIDs {
+			_ = FinishUpgrade(ctx, bID)
+		}
+	}
+
 	query := `
 	SELECT 
 		ob.id, ob.player_id, ob.building_data_id, ob.pos_x, ob.pos_y, 
@@ -283,8 +300,17 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		return fmt.Errorf("Can't upgrade building: insufficient resources")
 	}
 
+	townHallLevel, err := GetPlayerTownHallLevel(ctx, playerID)
+	if err != nil {
+		return err
+	}
+
 	switch bData.BuildingType {
 	case "Town Hall":
+		if bData.BuildingLevel >= 4 {
+			return fmt.Errorf("Town Hall is already maxed out")
+		}
+
 		x, err := GetTownHallData(ctx, bData.BuildingLevel)
 		if err != nil {
 			return fmt.Errorf("Can't fetch town hall data: %w", err)
@@ -304,6 +330,14 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Building is already maxed out")
 		}
 
+		nextDef, err := GetDefBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
+		if err != nil {
+			return fmt.Errorf("Error in fetching next level stats: %w", err)
+		}
+		if townHallLevel < nextDef.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextDef.UnlockTownHallLevel)
+		}
+
 	case "Elixir Collector", "Pancake Machine":
 		x, err := GetResBuildingData(ctx, bData.BuildingType, bData.BuildingLevel)
 		if err != nil {
@@ -312,6 +346,14 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
 			return fmt.Errorf("Building is already maxed out")
+		}
+
+		nextRes, err := GetResBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
+		if err != nil {
+			return fmt.Errorf("Error in fetching next level stats: %w", err)
+		}
+		if townHallLevel < nextRes.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextRes.UnlockTownHallLevel)
 		}
 
 	case "Elixir Storage", "Pancake Stack":
@@ -324,6 +366,14 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Building is already maxed out")
 		}
 
+		nextStrg, err := GetStrgBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
+		if err != nil {
+			return fmt.Errorf("Error in fetching next level stats: %w", err)
+		}
+		if townHallLevel < nextStrg.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextStrg.UnlockTownHallLevel)
+		}
+
 	case "Laboratory":
 		x, err := GetLabData(ctx, bData.BuildingType, bData.BuildingLevel)
 		if err != nil {
@@ -333,6 +383,15 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
 			return fmt.Errorf("Building is already maxed out")
 		}
+
+		nextLab, err := GetLabData(ctx, bData.BuildingType, bData.BuildingLevel+1)
+		if err != nil {
+			return fmt.Errorf("Error in fetching next level stats: %w", err)
+		}
+		if townHallLevel < nextLab.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextLab.UnlockTownHallLevel)
+		}
+
 	case "Army Camp":
 		x, err := GetArmyCampData(ctx, bData.BuildingType, bData.BuildingLevel)
 		if err != nil {
@@ -342,6 +401,53 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
 			return fmt.Errorf("Building is already maxed out")
 		}
+
+		nextCamp, err := GetArmyCampData(ctx, bData.BuildingType, bData.BuildingLevel+1)
+		if err != nil {
+			return fmt.Errorf("Error in fetching next level stats: %w", err)
+		}
+		if townHallLevel < nextCamp.UnlockTownHallLevel {
+			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextCamp.UnlockTownHallLevel)
+		}
+	}
+
+	if bData.UpgradeTime == 0 {
+		upgradedLevel := bData.BuildingLevel + 1
+		upgradedBData, err := GetBuildingDataByTypeLevel(ctx, bData.BuildingType, upgradedLevel)
+		if err != nil {
+			return fmt.Errorf("Failed to find data of upgraded building: %w", err)
+		}
+
+		tx, err := database.DB.Begin(ctx)
+		if err != nil {
+			return fmt.Errorf("Failed to begin database transaction: %w", err)
+		}
+		defer tx.Rollback(ctx)
+
+		queryUpdate := `UPDATE owned_building SET building_data_id = $1, upgrade_complete_at = NULL WHERE id = $2`
+		_, err = tx.Exec(ctx, queryUpdate, upgradedBData.ID, ownedBuildingID)
+		if err != nil {
+			return fmt.Errorf("Error in updating owned building data: %w", err)
+		}
+
+		newPancakes := playerStats.Pancakes - bData.UpgradeCostPancakes
+		newElixir := playerStats.Elixir - bData.UpgradeCostElixir
+		err = UpdateResources(ctx, tx, playerID, newPancakes, newElixir)
+		if err != nil {
+			return fmt.Errorf("Error updating player stats: %w", err)
+		}
+
+		newSkill := playerStats.Skill_points + bData.SkillOnUpgrade
+		err = AddSkill(ctx, tx, playerID, newSkill)
+		if err != nil {
+			return fmt.Errorf("Error updating player skill: %w", err)
+		}
+
+		err = tx.Commit(ctx)
+		if err != nil {
+			return fmt.Errorf("Failed to commit to database: %w", err)
+		}
+		return nil
 	}
 
 	tx, err := database.DB.Begin(ctx)
@@ -575,4 +681,78 @@ func GetPlayerStorageCapacity(ctx context.Context, playerID uuid.UUID) (int, int
 	}
 
 	return maxElixir, maxPancakes, nil
+}
+
+func CancelUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
+	query1 := `
+	SELECT ob.player_id, ob.upgrade_complete_at, bd.building_type, bd.building_level, bd.upgrade_cost_elixir, bd.upgrade_cost_pancakes, ob.last_collected_at
+	FROM owned_building ob
+	INNER JOIN building_data bd ON ob.building_data_id = bd.id
+	WHERE ob.id = $1
+	`
+	var playerID uuid.UUID
+	var upgradeCompleteAt *time.Time
+	var bType string
+	var currLevel int
+	var costElixir int
+	var costPancakes int
+	var lastCollectedAt *time.Time
+
+	err := database.DB.QueryRow(ctx, query1, ownedBuildingID).Scan(&playerID, &upgradeCompleteAt, &bType, &currLevel, &costElixir, &costPancakes, &lastCollectedAt)
+	if err != nil {
+		return fmt.Errorf("Failed to fetch building: %w", err)
+	}
+
+	if upgradeCompleteAt == nil {
+		return fmt.Errorf("Building is not under upgrade")
+	}
+
+	if time.Now().After(*upgradeCompleteAt) {
+		return fmt.Errorf("Upgrade has already finished")
+	}
+
+	tx, err := database.DB.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	isInitialPlacement := lastCollectedAt != nil && lastCollectedAt.Unix() == 0
+
+	if isInitialPlacement {
+		queryDelete := `DELETE FROM owned_building WHERE id = $1`
+		_, err = tx.Exec(ctx, queryDelete, ownedBuildingID)
+		if err != nil {
+			return fmt.Errorf("Error in deleting cancelled building placement: %w", err)
+		}
+	} else {
+		queryRevert := `UPDATE owned_building SET upgrade_complete_at = NULL WHERE id = $1`
+		_, err = tx.Exec(ctx, queryRevert, ownedBuildingID)
+		if err != nil {
+			return fmt.Errorf("Error in reverting building upgrade: %w", err)
+		}
+	}
+
+	refundElixir := costElixir / 2
+	refundPancakes := costPancakes / 2
+
+	playerStats, err := GetPlayerInfoByID(ctx, playerID)
+	if err != nil {
+		return err
+	}
+
+	newPancakes := playerStats.Pancakes + refundPancakes
+	newElixir := playerStats.Elixir + refundElixir
+
+	err = UpdateResources(ctx, tx, playerID, newPancakes, newElixir)
+	if err != nil {
+		return fmt.Errorf("Error updating player resources: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit database transaction: %w", err)
+	}
+
+	return nil
 }
