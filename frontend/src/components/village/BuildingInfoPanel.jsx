@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUiStore } from '../../store/uiStore';
 import { useVillageStore } from '../../store/villageStore';
-import { startUpgrade, getVillage, getPlayerInfo } from '../../api/village';
+import { startUpgrade, cancelUpgrade, getVillage, getPlayerInfo } from '../../api/village';
 
 export default function BuildingInfoPanel() {
     const selectedId=useUiStore((state) => state.selectedBuildingId);
@@ -37,6 +37,27 @@ export default function BuildingInfoPanel() {
         }
     };
 
+    const handleCancel=async () => {
+        setIsUpgrading(true);
+        setError(null);
+        try {
+            if (confirm("Are you sure you want to cancel this upgrade? You will get a 50% resource refund.")) {
+                await cancelUpgrade(selectedBuilding.id); 
+                const [newVillageData, newStats]=await Promise.all([getVillage(), getPlayerInfo()]);
+                setGameData(newVillageData, newStats);
+                clearSelection();
+            }
+        }
+        catch (err) {
+            setError(err.message);
+        }
+        finally {
+            setIsUpgrading(false);
+        }
+    };
+
+    const isCurrentlyUpgrading=!!selectedBuilding.upgradeCompleteAt;
+
     return (
         <div style={styles.panelOverlay}>
             <div style={styles.header}>
@@ -52,9 +73,15 @@ export default function BuildingInfoPanel() {
 
             <div style={styles.actions}>
                 <button style={styles.moveBtn} onClick={() => startMove(selectedBuilding.id)}>Move</button>
-                <button style={styles.upgradeBtn} onClick={handleUpgrade} disabled={isUpgrading}>
-                    {isUpgrading ? 'Upgrading...' : 'Upgrade'}
-                </button>
+                {isCurrentlyUpgrading ? (
+                    <button style={styles.cancelBtn} onClick={handleCancel} disabled={isUpgrading}>
+                        {isUpgrading ? 'Canceling...' : 'Cancel'}
+                    </button>
+                ) : (
+                    <button style={styles.upgradeBtn} onClick={handleUpgrade} disabled={isUpgrading}>
+                        {isUpgrading ? 'Upgrading...' : 'Upgrade'}
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -85,6 +112,10 @@ const styles={
     },
     upgradeBtn: {
         flex: 1, backgroundColor: '#2ecc71', color: 'white', border: '2px solid #27ae60',
+        borderRadius: '8px', padding: '0.75rem', fontSize: '1.2rem', cursor: 'pointer', fontFamily: 'inherit',
+    },
+    cancelBtn: {
+        flex: 1, backgroundColor: '#e74c3c', color: 'white', border: '2px solid #c0392b',
         borderRadius: '8px', padding: '0.75rem', fontSize: '1.2rem', cursor: 'pointer', fontFamily: 'inherit',
     }
 };

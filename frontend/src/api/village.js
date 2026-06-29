@@ -34,3 +34,7 @@ export async function finishUpgrade(buildingID) {
 export async function collectResource(buildingID) {
     return apiClient('/village/collect', {method: 'POST', body: JSON.stringify({ building_id: buildingID })});
 }
+
+export async function cancelUpgrade(buildingID) {
+    return apiClient('/village/upgrade/cancel', {method: 'POST', body: JSON.stringify({ building_id: buildingID })});
+}
