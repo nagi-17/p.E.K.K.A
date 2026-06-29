@@ -65,6 +65,17 @@ export default function BattlePage() {
             }
         }
         checkPlayerArmy();
+
+        return () => {
+            if (pixiAppRef.current) {
+                pixiAppRef.current.destroy(true, { children: true });
+                pixiAppRef.current=null;
+            }
+            if (battleSceneRef.current) {
+                battleSceneRef.current.destroy();
+                battleSceneRef.current=null;
+            }
+        };
     }, []);
 
     const handleFindOpponent=async () => {
@@ -353,7 +364,7 @@ export default function BattlePage() {
                                         Surrender</button>
                                 ) : (
                                     <button style={styles.skipBtn} onClick={handleSkipVisuals}>
-                                        Skip Visuals</button>
+                                        End Battle</button>
                                 )}
                             </div>
                         </div>

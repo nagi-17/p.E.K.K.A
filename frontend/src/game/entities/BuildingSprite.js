@@ -38,8 +38,13 @@ export class BuildingSprite {
         this.progressBar=null;
         this.ticker=null;
 
-        if (this.upgradeCompleteAt && this.upgradeCompleteAt>Date.now()) {
-            this.setupConstructionVisuals();
+        if (this.upgradeCompleteAt) {
+            if (this.upgradeCompleteAt > Date.now()) {
+                this.setupConstructionVisuals();
+            }
+            else {
+                this.completeUpgradeOnBackend();
+            }
         } else {
             this.lastCollectedAt=buildingData.lastCollectedAt ? new Date(buildingData.lastCollectedAt).getTime() : Date.now();
             this.setupResourceBubble();
@@ -88,6 +93,7 @@ export class BuildingSprite {
         if (percent<0)
             percent=0;
 
+        if (!this.progressBar) return;
         this.progressBar.clear();
         this.progressBar.rect(0, 0, this.pixelWidth, 8).fill(0xe74c3c).stroke({ width: 2, color: 0x000000 });
         this.progressBar.rect(0, 0, this.pixelWidth * percent, 8).fill(0x2ecc71);

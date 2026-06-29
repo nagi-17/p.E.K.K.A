@@ -7,6 +7,7 @@ export class TroopSprite {
         this.level=level;
         this.maxHealth=maxHealth;
         this.health=maxHealth;
+        this.currentHP=maxHealth;
 
         this.container=new PIXI.Container();
 
@@ -44,7 +45,8 @@ export class TroopSprite {
     }
 
     setHealth(currentHealth) {
-        this.health=Math.max(0, currentHealth);
+        this.currentHP=Math.max(0, currentHealth);
+        this.health=this.currentHP;
         this.updateHealthBar();
     }
 
