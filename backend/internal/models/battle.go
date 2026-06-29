@@ -11,13 +11,13 @@ import (
 )
 
 type BattleLog struct {
-	ID             uuid.UUID `db:"id"`
-	AttackerID     uuid.UUID `db:"attacker_id"`
-	DefenderID     uuid.UUID `db:"defender_id"`
-	ElixirLooted   int       `db:"elixir_looted"`
-	PancakesLooted int       `db:"pancakes_looted"`
-	DamagePercent  float32   `db:"damage_percent"`
-	TimeOfBattle   time.Time `db:"time_of_battle"`
+	ID             uuid.UUID `db:"id" json:"id"`
+	AttackerID     uuid.UUID `db:"attacker_id" json:"attacker_id"`
+	DefenderID     uuid.UUID `db:"defender_id" json:"defender_id"`
+	ElixirLooted   int       `db:"elixir_looted" json:"elixir_looted"`
+	PancakesLooted int       `db:"pancakes_looted" json:"pancakes_looted"`
+	DamagePercent  float32   `db:"damage_percent" json:"damage_percent"`
+	TimeOfBattle   time.Time `db:"time_of_battle" json:"time_of_battle"`
 }
 
 type OpponentData struct {

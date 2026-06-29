@@ -25,13 +25,13 @@ type BuildingData struct {
 }
 
 type OwnedBuildingData struct {
-	ID                uuid.UUID  `db:"id"`
-	PlayerID          uuid.UUID  `db:"player_id"`
-	BuildingDataID    int        `db:"building_data_id"`
-	PosX              int        `db:"pos_x"`
-	PosY              int        `db:"pos_y"`
-	UpgradeCompleteAt *time.Time `db:"upgrade_complete_at"`
-	LastCollectedAt   *time.Time `db:"last_collected_at"`
+	ID                uuid.UUID  `db:"id" json:"id"`
+	PlayerID          uuid.UUID  `db:"player_id" json:"player_id"`
+	BuildingDataID    int        `db:"building_data_id" json:"building_data_id"`
+	PosX              int        `db:"pos_x" json:"pos_x"`
+	PosY              int        `db:"pos_y" json:"pos_y"`
+	UpgradeCompleteAt *time.Time `db:"upgrade_complete_at" json:"upgrade_complete_at"`
+	LastCollectedAt   *time.Time `db:"last_collected_at" json:"last_collected_at"`
 }
 
 type TownHallData struct {
@@ -79,17 +79,17 @@ type ArmyCampData struct {
 
 type OwnedBuildingWithData struct {
 	OwnedBuildingData
-	BuildingType         string        `db:"building_type"`
-	BuildingLevel        int           `db:"building_level"`
-	Health               int           `db:"health"`
-	Width                int           `db:"width"`
-	Height               int           `db:"height"`
-	BuildTime            time.Duration `db:"build_time"`
-	UpgradeCostElixir    int           `db:"upgrade_cost_elixir"`
-	UpgradeCostPancakes  int           `db:"upgrade_cost_pancakes"`
-	UpgradeTime          time.Duration `db:"upgrade_time"`
-	MaxQuantityAvailable int           `db:"max_quantity_available"`
-	SkillOnUpgrade       int           `db:"skill_on_upgrade"`
+	BuildingType         string        `db:"building_type" json:"building_type"`
+	BuildingLevel        int           `db:"building_level" json:"building_level"`
+	Health               int           `db:"health" json:"health"`
+	Width                int           `db:"width" json:"width"`
+	Height               int           `db:"height" json:"height"`
+	BuildTime            time.Duration `db:"build_time" json:"build_time"`
+	UpgradeCostElixir    int           `db:"upgrade_cost_elixir" json:"upgrade_cost_elixir"`
+	UpgradeCostPancakes  int           `db:"upgrade_cost_pancakes" json:"upgrade_cost_pancakes"`
+	UpgradeTime          time.Duration `db:"upgrade_time" json:"upgrade_time"`
+	MaxQuantityAvailable int           `db:"max_quantity_available" json:"max_quantity_available"`
+	SkillOnUpgrade       int           `db:"skill_on_upgrade" json:"skill_on_upgrade"`
 }
 
 func GetBuildingDataByID(ctx context.Context, buildingID int) (*BuildingData, error) {

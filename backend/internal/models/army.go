@@ -122,6 +122,23 @@ func GetTrainedArmy(ctx context.Context, playerID string) ([]TrainedTroopStatus,
 		return nil, fmt.Errorf("Error in parsing player id: %w", err)
 	}
 
+	checkQuery := `SELECT troop_type FROM player_troop_level WHERE player_id = $1 AND upgrade_complete_at IS NOT NULL AND upgrade_complete_at <= NOW()`
+	rowsCheck, err := database.DB.Query(ctx, checkQuery, playerUUID)
+	if err == nil {
+		var completedTypes []string
+		for rowsCheck.Next() {
+			var tType string
+			if errScan := rowsCheck.Scan(&tType); errScan == nil {
+				completedTypes = append(completedTypes, tType)
+			}
+		}
+		rowsCheck.Close()
+
+		for _, tType := range completedTypes {
+			_ = FinishTroopUpgrade(ctx, playerID, tType)
+		}
+	}
+
 	query := `
 		SELECT ptl.troop_type, ptl.current_level, ptl.upgrade_complete_at, COALESCE(tt.quantity, 0) as quantity
 		FROM player_troop_level ptl
