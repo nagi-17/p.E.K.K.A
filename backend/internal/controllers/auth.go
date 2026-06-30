@@ -3,11 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/nagi-17/p.E.K.K.A/internal/config"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/services"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,23 +31,6 @@ type LoginResponse struct {
 	Player_ID string `json:"player_id"`
 }
 
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	return string(bytes), err
-}
-
-func generateJWT(player_ID string) (string, error) {
-	jwtConfig := config.LoadConfig()
-
-	mapClaims := jwt.MapClaims{
-		"player_id": player_ID,
-		"exp":       time.Now().Add(time.Hour * 24).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, mapClaims)
-	return token.SignedString([]byte(jwtConfig.JWTSecret))
-}
-
 func Register(w http.ResponseWriter, request *http.Request) {
 
 	var reg_req RegisterRequest
@@ -72,7 +53,7 @@ func Register(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	hashedpassword, err := hashPassword(reg_req.Password)
+	hashedpassword, err := services.HashPassword(reg_req.Password)
 	if err != nil {
 		http.Error(w, "Failed to hash password due to internal server error", http.StatusInternalServerError)
 		return
@@ -123,7 +104,7 @@ func Login(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tokenString, err := generateJWT(playerInfo.ID.String())
+	tokenString, err := services.GenerateJWT(playerInfo.ID.String())
 	if err != nil {
 		http.Error(w, "Failed to generate jwt-token due to internal server error", http.StatusInternalServerError)
 		return
