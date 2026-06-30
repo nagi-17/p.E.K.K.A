@@ -120,7 +120,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -224,7 +224,7 @@ func MoveBuilding(ctx context.Context, ownedBuildingID uuid.UUID, newX int, newY
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -452,7 +452,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -518,7 +518,7 @@ func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -612,7 +612,7 @@ func CollectResource(ctx context.Context, ownedBuildingID uuid.UUID) error {
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 
 	defer tx.Rollback(ctx)
