@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/services"
 )
 
 type PlaceBuildingReq struct {
@@ -80,7 +81,7 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 		http.Error(w, "Invalid building coordinates", http.StatusBadRequest)
 		return
 	}
-	err = models.PlaceNewBuilding(request.Context(), playerIDuuid, req.Btype, req.X, req.Y)
+	err = services.PlaceNewBuilding(request.Context(), playerIDuuid, req.Btype, req.X, req.Y)
 	if err != nil {
 		switch err.Error() {
 		case "Invalid building type", "Town Hall is under levelled", "Not enough pancakes", "Not enough elixir", "All possible buildings of this type have already been placed", "Cell is occupied":
@@ -169,7 +170,7 @@ func StartUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = models.StartUpgrade(request.Context(), buildingUUID)
+	err = services.StartUpgrade(request.Context(), buildingUUID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
