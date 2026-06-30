@@ -257,7 +257,7 @@ func Attack(ctx context.Context, attackerID string, defenderID string, dropX flo
 
 	tx, err := database.DB.Begin(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to begin databse transaction: %w", err)
+		return nil, fmt.Errorf("Failed to begin database transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -275,28 +275,20 @@ func Attack(ctx context.Context, attackerID string, defenderID string, dropX flo
 		return nil, err
 	}
 
-	query1 := `UPDATE player_info SET trophies = $1 WHERE player_id = $2`
-	_, err = tx.Exec(ctx, query1, newAttackerTrophies, attackerUUID)
+	err = models.UpdateTrophies(ctx, tx, newAttackerTrophies, newDefenderTrophies, attackerUUID, defenderUUID)
 	if err != nil {
-		return nil, fmt.Errorf("Error in updating attacker trophies: %w", err)
+		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, query1, newDefenderTrophies, defenderUUID)
+	err = models.UpdateArmyAfterBattle(ctx, tx, attackerUUID)
 	if err != nil {
-		return nil, fmt.Errorf("Error in updating defender trophies: %w", err)
-	}
-
-	query2 := `UPDATE trained_troop SET quantity = 0 WHERE player_id = $1`
-	_, err = tx.Exec(ctx, query2, attackerUUID)
-	if err != nil {
-		return nil, fmt.Errorf("Error in clearing attacker's army: %w", err)
+		return nil, err
 	}
 
 	shieldEnd := time.Now().Add(8 * time.Hour)
-	query3 := `UPDATE player_info SET shield_end_time = $1 WHERE player_id = $2`
-	_, err = tx.Exec(ctx, query3, shieldEnd, defenderUUID)
+	err = models.UpdateShieldTime(ctx, tx, shieldEnd, defenderUUID)
 	if err != nil {
-		return nil, fmt.Errorf("Error in applying shield to defender: %w", err)
+		return nil, err
 	}
 
 	err = models.CreateBattleLog(ctx, tx, attackerUUID, defenderUUID, elixirLooted, pancakesLooted, damagePercent)

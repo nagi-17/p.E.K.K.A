@@ -149,3 +149,38 @@ func CreateBattleLog(ctx context.Context, tx pgx.Tx, attackerID uuid.UUID, defen
 
 	return nil
 }
+
+func UpdateTrophies(ctx context.Context, tx pgx.Tx, newAttackerTrophies int, newDefenderTrophies int, attackerUUID uuid.UUID, defenderUUID uuid.UUID) error {
+	query1 := `UPDATE player_info SET trophies = $1 WHERE player_id = $2`
+	_, err := tx.Exec(ctx, query1, newAttackerTrophies, attackerUUID)
+	if err != nil {
+		return fmt.Errorf("Error in updating attacker trophies: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, query1, newDefenderTrophies, defenderUUID)
+	if err != nil {
+		return fmt.Errorf("Error in updating defender trophies: %w", err)
+	}
+
+	return nil
+}
+
+func UpdateArmyAfterBattle(ctx context.Context, tx pgx.Tx, attackerUUID uuid.UUID) error {
+	query2 := `UPDATE trained_troop SET quantity = 0 WHERE player_id = $1`
+	_, err := tx.Exec(ctx, query2, attackerUUID)
+	if err != nil {
+		return fmt.Errorf("Error in clearing attacker's army: %w", err)
+	}
+
+	return nil
+}
+
+func UpdateShieldTime(ctx context.Context, tx pgx.Tx, shieldEnd time.Time, defenderUUID uuid.UUID) error {
+	query3 := `UPDATE player_info SET shield_end_time = $1 WHERE player_id = $2`
+	_, err := tx.Exec(ctx, query3, shieldEnd, defenderUUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
