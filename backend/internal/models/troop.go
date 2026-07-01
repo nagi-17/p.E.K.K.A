@@ -26,13 +26,6 @@ type TroopData struct {
 	UpgradeTime         int    `db:"upgrade_time"`
 }
 
-type TrainedTroop struct {
-	ID          uuid.UUID `db:"id"`
-	PlayerID    string    `db:"player_id"`
-	TroopDataID int       `db:"troop_data_id"`
-	Quantity    int       `db:"quantity"`
-}
-
 type PlayerTroopLevel struct {
 	ID                uuid.UUID  `db:"id"`
 	PlayerID          uuid.UUID  `db:"player_id"`

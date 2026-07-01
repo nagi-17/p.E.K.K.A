@@ -22,14 +22,6 @@ type MoveBuildingReq struct {
 	New_y      int    `json:"new_y"`
 }
 
-type UpgradeBuildingReq struct {
-	BuildingID string `json:"building_id"`
-}
-
-type Response struct {
-	Message string `json:"message"`
-}
-
 func LoadVillage(w http.ResponseWriter, request *http.Request) {
 	val := request.Context().Value("player_id")
 	checkPlayerIDStr, ok := val.(string)

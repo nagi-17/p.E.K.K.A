@@ -10,45 +10,12 @@ import (
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
 )
 
-type BattleLog struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	AttackerID     uuid.UUID `db:"attacker_id" json:"attacker_id"`
-	DefenderID     uuid.UUID `db:"defender_id" json:"defender_id"`
-	ElixirLooted   int       `db:"elixir_looted" json:"elixir_looted"`
-	PancakesLooted int       `db:"pancakes_looted" json:"pancakes_looted"`
-	DamagePercent  float32   `db:"damage_percent" json:"damage_percent"`
-	TimeOfBattle   time.Time `db:"time_of_battle" json:"time_of_battle"`
-}
-
 type OpponentData struct {
 	PlayerID    uuid.UUID `json:"player_id"`
 	Trophies    int       `json:"trophies"`
 	SkillPoints int       `json:"skill_points"`
 	Elixir      int       `json:"elixir"`
 	Pancakes    int       `json:"pancakes"`
-}
-
-type AttackingTroop struct {
-	TroopType  string
-	Health     int
-	DPS        int
-	DPA        int
-	TroopRange int
-	Quantity   int
-	Airborne   bool
-}
-
-type DefenseSnapshot struct {
-	BuildingType  string
-	BuildingLevel int
-	Health        int
-	BuildingRange int
-	DamagePerSec  int
-	DamagePerShot int
-	PosX          int
-	PosY          int
-	Width         int
-	Height        int
 }
 
 func FindOpponent(ctx context.Context, attackerID string) (*OpponentData, error) {
