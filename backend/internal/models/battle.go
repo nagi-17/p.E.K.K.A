@@ -47,6 +47,8 @@ type DefenseSnapshot struct {
 	DamagePerShot int
 	PosX          int
 	PosY          int
+	Width         int
+	Height        int
 }
 
 func FindOpponent(ctx context.Context, attackerID string) (*OpponentData, error) {
@@ -111,10 +113,10 @@ func GetAttackingArmy(ctx context.Context, playerID uuid.UUID) ([]AttackingTroop
 
 func GetDefenseSnapshot(ctx context.Context, playerID uuid.UUID) ([]DefenseSnapshot, error) {
 	query := `
-	SELECT bd.building_type, bd.building_level, bd.health, dd.building_range, dd.damage_per_sec, dd.damage_per_shot, ob.pos_x, ob.pos_y
+	SELECT bd.building_type, bd.building_level, bd.health, COALESCE(dd.building_range, 0), COALESCE(dd.damage_per_sec, 0), COALESCE(dd.damage_per_shot, 0), ob.pos_x, ob.pos_y, bd.width, bd.height
 	FROM owned_building ob 
 	INNER JOIN building_data bd ON ob.building_data_id = bd.id 
-	INNER JOIN defense_building_data dd ON dd.building_data_id = bd.id 
+	LEFT JOIN defense_building_data dd ON dd.building_data_id = bd.id 
 	WHERE ob.player_id = $1`
 
 	rows, err := database.DB.Query(ctx, query, playerID)
@@ -126,7 +128,7 @@ func GetDefenseSnapshot(ctx context.Context, playerID uuid.UUID) ([]DefenseSnaps
 	var defenses []DefenseSnapshot
 	for rows.Next() {
 		var d DefenseSnapshot
-		err = rows.Scan(&d.BuildingType, &d.BuildingLevel, &d.Health, &d.BuildingRange, &d.DamagePerSec, &d.DamagePerShot, &d.PosX, &d.PosY)
+		err = rows.Scan(&d.BuildingType, &d.BuildingLevel, &d.Health, &d.BuildingRange, &d.DamagePerSec, &d.DamagePerShot, &d.PosX, &d.PosY, &d.Width, &d.Height)
 		if err != nil {
 			return nil, fmt.Errorf("Error in scanning defense snapshot rows: %w", err)
 		}
