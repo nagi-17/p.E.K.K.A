@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -83,12 +84,12 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 	}
 	err = services.PlaceNewBuilding(request.Context(), playerIDuuid, req.Btype, req.X, req.Y)
 	if err != nil {
-		switch err.Error() {
-		case "Invalid building type", "Town Hall is under levelled", "Not enough pancakes", "Not enough elixir", "All possible buildings of this type have already been placed", "Cell is occupied":
+		if HelperErrorFunc(err) {
 			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, "Failed to place building-internal server error", http.StatusInternalServerError)
+			return
 		}
+		http.Error(w, "Failed to place building-internal server error", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -252,4 +253,10 @@ func CancelUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
+}
+
+func HelperErrorFunc(err error) bool {
+	return errors.Is(err, services.ErrInvalidBuildingType) || errors.Is(err, services.ErrTownHallUnderLevel) ||
+		errors.Is(err, services.ErrNotEnoughPancakes) || errors.Is(err, services.ErrNotEnoughElixir) ||
+		errors.Is(err, services.ErrBuildingLimitReached) || errors.Is(err, services.ErrCellOccupied)
 }
