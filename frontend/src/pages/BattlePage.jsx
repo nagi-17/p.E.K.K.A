@@ -212,7 +212,7 @@ export default function BattlePage() {
         });
     };
 
-    const triggerBackendAttack=async (gridX, gridY) => {
+    const triggerBackendAttack=(gridX, gridY) => {
         setMatchState('battle');
 
         timerIntervalRef.current=setInterval(() => {
@@ -228,28 +228,30 @@ export default function BattlePage() {
             });
         }, 1000);
 
-        try {
-            const res=await launchAttack(opponent.player_id, gridX, gridY);
-            finalResultRef.current=res;
-        } catch (err) {
-            console.error("Backend attack simulation failed:", err);
-        }
-
         if (battleSceneRef.current) {
             battleSceneRef.current.startBattle();
         }
     };
 
-    const handleSimulationEnd=(visualDamagePercent) => {
+    const handleSimulationEnd=async (visualDamagePercent) => {
         clearInterval(timerIntervalRef.current);
-        setMatchState('ended');
+        
+        try {
+            const events = battleSceneRef.current ? battleSceneRef.current.getDeploymentEvents() : [];
+            const res=await launchAttack(opponent.player_id, events);
+            finalResultRef.current=res;
+        } catch (err) {
+            console.error("Backend attack simulation failed:", err);
+            finalResultRef.current={
+                elixir_looted: Math.floor(maxLootElixir * (visualDamagePercent / 100)),
+                pancakes_looted: Math.floor(maxLootPancakes * (visualDamagePercent / 100)),
+                damage_percent: visualDamagePercent
+            };
+        }
 
-        const finalRes=finalResultRef.current || {
-            elixir_looted: Math.floor(maxLootElixir * (visualDamagePercent / 100)),
-            pancakes_looted: Math.floor(maxLootPancakes * (visualDamagePercent / 100)),
-            damage_percent: visualDamagePercent
-        };
+        const finalRes=finalResultRef.current;
         setBattleResult(finalRes);
+        setMatchState('ended');
     };
 
     const handleSkipVisuals=() => {

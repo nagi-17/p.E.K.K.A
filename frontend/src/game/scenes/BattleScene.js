@@ -32,6 +32,9 @@ export class BattleScene {
         this.totalInitialHP=0;
         this.currentDestroyedHP=0;
 
+        this.deploymentEvents=[];
+        this.elapsedTicks=0;
+
         this.setupDeploymentInteraction();
 
         PIXI.Ticker.shared.add(this.update, this);
@@ -44,12 +47,15 @@ export class BattleScene {
             if (!this.deployableTroopType || this.isBattleEnded) return;
 
             const localPos=event.getLocalPosition(this.container);
-            const gridX=Math.floor(localPos.x / gameConfig.TILE_SIZE);
-            const gridY=Math.floor(localPos.y / gameConfig.TILE_SIZE);
+            const targetX=Math.floor(localPos.x / gameConfig.TILE_SIZE);
+            const targetY=Math.floor(localPos.y / gameConfig.TILE_SIZE);
 
-            if (gridX >= 0 && gridX < gameConfig.GRID_WIDTH && gridY >= 0 && gridY < gameConfig.GRID_HEIGHT) {
-                if (this.isCellFree(gridX, gridY)) {
-                    this.deployTroop(this.deployableTroopType, localPos.x, localPos.y, gridX, gridY);
+            if (targetX >= 0 && targetX < gameConfig.GRID_WIDTH && targetY >= 0 && targetY < gameConfig.GRID_HEIGHT) {
+                const freeCell = this.findNearestFreeCell(targetX, targetY);
+                if (freeCell) {
+                    const snapX=(freeCell.x + 0.5)*gameConfig.TILE_SIZE;
+                    const snapY=(freeCell.y + 0.5)*gameConfig.TILE_SIZE;
+                    this.deployTroop(this.deployableTroopType, snapX, snapY, freeCell.x, freeCell.y);
                 }
             }
         });
@@ -62,6 +68,45 @@ export class BattleScene {
             }
         }
         return true;
+    }
+
+    findNearestFreeCell(targetX, targetY) {
+        if (this.isCellFree(targetX, targetY)) {
+            return { x: targetX, y: targetY };
+        }
+
+        const maxRadius=Math.max(gameConfig.GRID_WIDTH, gameConfig.GRID_HEIGHT);
+        for (let r = 1; r < maxRadius; r++) {
+            let bestCell=null;
+            let minDist=Infinity;
+
+            for (let i=-r; i <= r; i++) {
+                const cells = [
+                    { x: targetX + i, y: targetY - r },
+                    { x: targetX + i, y: targetY + r },
+                    { x: targetX - r, y: targetY + i },
+                    { x: targetX + r, y: targetY + i }];
+
+                for (const cell of cells) {
+                    if (cell.x >= 0 && cell.x < gameConfig.GRID_WIDTH && cell.y >= 0 && cell.y < gameConfig.GRID_HEIGHT) {
+                        if (this.isCellFree(cell.x, cell.y)) {
+                            const dx=cell.x-targetX;
+                            const dy=cell.y-targetY;
+                            const dist=dx*dx + dy*dy;
+                            if (dist < minDist) {
+                                minDist=dist;
+                                bestCell=cell;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (bestCell) {
+                return bestCell;
+            }
+        }
+        return null;
     }
 
     setDeployableTroop(troopType, onTroopDeployed) {
@@ -87,9 +132,22 @@ export class BattleScene {
         this.troops.push(troop);
         this.container.addChild(troop.container);
 
+        const tick = this.isBattleActive ? this.elapsedTicks : 0;
+        this.deploymentEvents.push({
+            troop_type: type,
+            quantity: 1,
+            drop_x: gridX,
+            drop_y: gridY,
+            tick: tick
+        });
+
         if (this.onTroopDeployedCallback) {
             this.onTroopDeployedCallback(type, gridX, gridY);
         }
+    }
+
+    getDeploymentEvents() {
+        return this.deploymentEvents;
     }
 
     loadDefenderVillage(buildingData) {
@@ -152,6 +210,7 @@ export class BattleScene {
     update(ticker) {
         if (!this.isBattleActive) return;
 
+        this.elapsedTicks += 1;
         const deltaTime=ticker.deltaTime;
 
         this.updateProjectiles(deltaTime);
