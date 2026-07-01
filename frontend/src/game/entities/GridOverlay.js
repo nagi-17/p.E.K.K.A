@@ -28,5 +28,8 @@ export class GridOverlay {
 
         this.graphics.stroke({ width: 2, color: 0xffffff, alpha: 0.6 });
         this.graphics.rect(0, 0, base_width, base_height).stroke({width: 6, color: 0xff0000});
+
+        this.graphics.hitArea = new PIXI.Rectangle(0, 0, base_width, base_height);
+        this.container.hitArea = new PIXI.Rectangle(0, 0, base_width, base_height);
     }
 }
