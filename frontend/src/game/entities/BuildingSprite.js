@@ -37,6 +37,7 @@ export class BuildingSprite {
         
         this.progressBar=null;
         this.ticker=null;
+        this.isDestroyed=false;
 
         if (this.upgradeCompleteAt) {
             if (this.upgradeCompleteAt > Date.now()) {
@@ -73,6 +74,11 @@ export class BuildingSprite {
     }
 
     updateProgress() {
+        if (this.isDestroyed || !this.progressBar || !this.progressBar.context) {
+            PIXI.Ticker.shared.remove(this.updateProgress, this);
+            return;
+        }
+
         const now=Date.now();
         const timeLeft=this.upgradeCompleteAt-now;
 
@@ -80,7 +86,9 @@ export class BuildingSprite {
             PIXI.Ticker.shared.remove(this.updateProgress, this);
             this.sprite.tint=0xFFFFFF;
             if (this.progressBar) {
-                this.container.removeChild(this.progressBar);
+                try {
+                    this.container.removeChild(this.progressBar);
+                } catch (e) {}
                 this.progressBar=null;
             }
 
@@ -93,10 +101,19 @@ export class BuildingSprite {
         if (percent<0)
             percent=0;
 
-        if (!this.progressBar) return;
-        this.progressBar.clear();
-        this.progressBar.rect(0, 0, this.pixelWidth, 8).fill(0xe74c3c).stroke({ width: 2, color: 0x000000 });
-        this.progressBar.rect(0, 0, this.pixelWidth * percent, 8).fill(0x2ecc71);
+        if (this.isDestroyed || !this.progressBar || !this.progressBar.context) {
+            PIXI.Ticker.shared.remove(this.updateProgress, this);   
+            return;
+        }
+
+        try {
+            this.progressBar.clear();
+            this.progressBar.rect(0, 0, this.pixelWidth, 8).fill(0xe74c3c).stroke({ width: 2, color: 0x000000 });
+            this.progressBar.rect(0, 0, this.pixelWidth * percent, 8).fill(0x2ecc71);
+        } catch (err) {
+            console.warn("BuildingSprite: progress bar render failed (likely destroyed), removing ticker.", err);
+            PIXI.Ticker.shared.remove(this.updateProgress, this);
+        }
     }
 
     async completeUpgradeOnBackend() {
@@ -185,11 +202,15 @@ export class BuildingSprite {
     }
 
     destroy() {
+        this.isDestroyed=true;
         if (this.ticker) {
             PIXI.Ticker.shared.remove(this.updateProgress, this);
         }
         if (this.animateBubble) {
             PIXI.Ticker.shared.remove(this.animateBubble);
+        }
+        if (this.progressBar) {
+            this.progressBar=null;
         }
         this.container.destroy({ children: true });
     }
