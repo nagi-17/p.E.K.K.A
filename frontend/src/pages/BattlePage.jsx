@@ -260,11 +260,12 @@ export default function BattlePage() {
         }
     };
 
-    const maxLootPancakes=opponent ? Math.floor(opponent.pancakes * 0.20) : 0;
     const maxLootElixir=opponent ? Math.floor(opponent.elixir * 0.20) : 0;
+    const maxLootPancakes=opponent ? Math.floor(opponent.pancakes * 0.20) : 0;
 
-    const currentLootPancakes=Math.floor(maxLootPancakes * (damagePercent / 100));
-    const currentLootElixir=Math.floor(maxLootElixir * (damagePercent / 100));
+    const currentLootElixir = battleResult ? battleResult.elixir_looted : (opponent ? Math.floor(opponent.elixir * (damagePercent / 100) * 0.20) : 0);
+    const currentLootPancakes = battleResult ? battleResult.pancakes_looted : (opponent ? Math.floor(opponent.pancakes * (damagePercent / 100) * 0.20) : 0);
+    const displayDamagePercent = battleResult ? battleResult.damage_percent : damagePercent;
 
     const formatTimer=(seconds) => {
         const m=Math.floor(seconds / 60);
@@ -316,7 +317,7 @@ export default function BattlePage() {
 
                         <div style={styles.damageTracker}>
                             <span>Damage:</span>
-                            <span style={styles.damagePctText}>{Math.round(damagePercent)}%</span>
+                            <span style={styles.damagePctText}>{Math.round(displayDamagePercent)}%</span>
                         </div>
                     </div>
 
