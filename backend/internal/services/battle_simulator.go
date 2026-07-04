@@ -68,7 +68,23 @@ func SimulateBattle(events []DeploymentEvent, defenses []models.DefenseSnapshot,
 			h = 3
 		}
 
-		isDefense := defenses[i].BuildingRange > 0
+		isDefense := defenses[i].BuildingType == "Cannon" || defenses[i].BuildingType == "Archer Tower" || defenses[i].BuildingType == "Mortar"
+		
+		var dps int
+		var rangePx float64
+		if defenses[i].BuildingType == "Cannon" {
+			dps = 9
+			rangePx = 9 * 32.0
+		} else if defenses[i].BuildingType == "Archer Tower" {
+			dps = 11
+			rangePx = 10 * 32.0
+		} else if defenses[i].BuildingType == "Mortar" {
+			dps = 4
+			rangePx = 11 * 32.0
+		} else {
+			dps = 0
+			rangePx = 0
+		}
 
 		buildings[i] = buildingUnit{
 			id:             i,
@@ -80,8 +96,8 @@ func SimulateBattle(events []DeploymentEvent, defenses []models.DefenseSnapshot,
 			width:          w,
 			height:         h,
 			isDefense:      isDefense,
-			rangePx:        float64(defenses[i].BuildingRange) * 32.0,
-			dps:            defenses[i].DamagePerSec,
+			rangePx:        rangePx,
+			dps:            dps,
 			damagePerShot:  defenses[i].DamagePerShot,
 			attackCooldown: 0,
 		}
@@ -235,14 +251,14 @@ func SimulateBattle(events []DeploymentEvent, defenses []models.DefenseSnapshot,
 			} else {
 				units[i].attackCooldown -= 1.0
 				if units[i].attackCooldown <= 0 {
-					damage := int(math.Ceil(float64(units[i].dps) * 1.5))
+					damage := int(math.Ceil(float64(units[i].dps) * 1.2))
 					before := target.health
 					target.health -= damage
 					if target.health < 0 {
 						target.health = 0
 					}
 					destroyedHP += before - target.health
-					units[i].attackCooldown = 45.0
+					units[i].attackCooldown = 60.0
 				}
 			}
 		}
@@ -273,9 +289,9 @@ func SimulateBattle(events []DeploymentEvent, defenses []models.DefenseSnapshot,
 			if target != nil {
 				buildings[i].attackCooldown -= 1.0
 				if buildings[i].attackCooldown <= 0 {
-					dmg := int(math.Ceil(float64(buildings[i].dps) * 1.8))
+					dmg := int(math.Ceil(float64(buildings[i].dps) * 1.2))
 					target.health -= dmg
-					buildings[i].attackCooldown = 50.0
+					buildings[i].attackCooldown = 60.0
 				}
 			}
 		}
