@@ -1,0 +1,15 @@
+.canvasContainer {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.tempText {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: white;
+    font-size: 2rem;
+    text-shadow: 0.125rem 0.125rem 0.25rem #000;
+}

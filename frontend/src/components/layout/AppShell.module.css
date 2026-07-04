@@ -1,0 +1,16 @@
+.shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: #2ecc71;
+}
+
+.mainContent {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

@@ -1,0 +1,124 @@
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal {
+    background-color: #ecf0f1;
+    width: 85%;
+    max-width: 28.125rem;
+    border-radius: 1.25rem;
+    border: 0.375rem solid #e67e22;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 0.75rem 1.875rem rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+}
+.statusTitle {
+    font-size: 3rem;
+    margin: 0;
+    text-shadow: 0.125rem 0.125rem 0px #000;
+    letter-spacing: 0.125rem;
+}
+.starContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    height: 5rem;
+}
+.star {
+    font-size: 3.5rem;
+    text-shadow: 0px 0.25rem 0.375rem rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+.starWon {
+    color: #f1c40f;
+}
+.starLost {
+    color: #7f8c8d;
+}
+.starBig {
+    font-size: 4.5rem;
+}
+.damageBox {
+    background-color: #34495e;
+    color: white;
+    border: 0.1875rem solid #2c3e50;
+    border-radius: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: inset 0 0.125rem 0.25rem rgba(0,0,0,0.5);
+}
+.damageText {
+    font-size: 1.25rem;
+    text-shadow: 0.0625rem 0.0625rem 0px #000;
+}
+.trophyBadge {
+    color: #f1c40f;
+    font-size: 1rem;
+    text-shadow: 0.0625rem 0.0625rem 0px #000;
+}
+.lootSection {
+    width: 100%;
+}
+.lootTitle {
+    margin: 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.375rem;
+}
+.lootGrid {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+.lootCard {
+    flex: 1;
+    background-color: #2c3e50;
+    border: 0.125rem solid #1a252f;
+    border-radius: 0.625rem;
+    padding: 0.625rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 0.25rem 0.375rem rgba(0,0,0,0.15);
+}
+.lootEmoji {
+    font-size: 1.75rem;
+}
+.lootAmount {
+    color: white;
+    font-size: 1.25rem;
+    text-shadow: 0.0625rem 0.0625rem 0px #000;
+}
+.returnBtn {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 0.625rem;
+    padding: 0.875rem 2rem;
+    font-size: 1.375rem;
+    cursor: pointer;
+    font-family: inherit;
+    text-shadow: 0.125rem 0.125rem 0px #27ae60;
+    box-shadow: 0 0.25rem 0px #27ae60;
+    margin-top: 0.5rem;
+    transition: transform 0.1s ease;
+    width: 80%;
+}

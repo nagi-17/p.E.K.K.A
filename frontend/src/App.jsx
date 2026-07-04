@@ -19,7 +19,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-const styles = {
-    h1_text: {fontFamily: '"Luckiest Guy", cursive', fontSize: '1rem', color: 'white'}
-}

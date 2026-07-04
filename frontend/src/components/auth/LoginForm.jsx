@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { loginUser } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import styles from './AuthForm.module.css';
 
 export default function LoginForm() {
     const[username, setUsername]=useState('');
@@ -32,23 +33,16 @@ export default function LoginForm() {
 
     let errMsg=null;
     if (error!==null) {
-        errMsg=<p style={styles.error}>{error}</p>;
+        errMsg=<p className={styles.error}>{error}</p>;
     }
 
     return (
-        <form onSubmit={handleSubmit} style={styles.form}>
-            <h2>Login to p.E.K.K.A</h2>
+        <form onSubmit={handleSubmit} className={styles.form}>
+            <h2>Login</h2>
             {errMsg}
-            <input type="text" placeholder="Username" value={username} onChange={handleUsernameChange} style={styles.input} required></input>
-            <input type="password" placeholder="Password" value={pass} onChange={handlePassChnage} style={styles.input} required></input>
-            <button type="submit" style={styles.button}>Enter Village</button>
+            <input type="text" placeholder="Username" value={username} onChange={handleUsernameChange} className={styles.input} required></input>
+            <input type="password" placeholder="Password" value={pass} onChange={handlePassChnage} className={styles.input} required></input>
+            <button type="submit" className={styles.button}>Enter Village</button>
         </form>
     );
-};
-
-const styles = {
-    form: { display:'flex', flexDirection:'column', gap:'1rem', width:'18.75rem', margin:'0 auto', padding:'1.25rem', backgroundColor:'transparent', borderRadius:'0.5rem', color:'black', alignItems: 'center'},
-    input: { width: '100%', padding:'0.875rem' ,borderRadius:'0.5rem', border:'none'},
-    button: { fontFamily: '"Luckiest Guy"', width:'100%', padding:'0.75rem', backgroundColor:'#00aaff', color:'white', border:'none', borderRadius:'0.25rem', cursor:'pointer', fontWeight:'light', fontSize: '1.5rem', alignItems: 'center'},
-    error: { color: '#e74c3c', fontSize: '0.875rem', margin: 0}
 };

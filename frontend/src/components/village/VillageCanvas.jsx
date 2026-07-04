@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useGameInit } from '../../hooks/useGameInit';
 import { GameApp } from '../../game/core/GameApp';
 import { useVillageStore } from '../../store/villageStore';
+import styles from './VillageCanvas.module.css';
 
 export default function VillageCanvas() {
     const canvasRef=useRef(null);
@@ -47,29 +48,11 @@ export default function VillageCanvas() {
     }, [buildings, loading]);
 
     if (loading) {
-        return <div style={styles.temp_text}>Loading Village</div>;
+        return <div className={styles.tempText}>Loading Village</div>;
     }
     if (error) {
-        return <div style={styles.temp_text}>Error: {error}</div>;
+        return <div className={styles.tempText}>Error: {error}</div>;
     }
 
-    return <div ref={canvasRef} style={styles.canvasContainer}></div>;
+    return <div ref={canvasRef} className={styles.canvasContainer}></div>;
 }
-
-const styles={
-    canvasContainer: { 
-        width: '100%', 
-        height: '100%', 
-        overflow: 'hidden'
-    }, 
-    temp_text: { 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100%', 
-        color: 'white', 
-        fontFamily: '"Luckiest Guy", cursive',
-        fontSize: '2rem',
-        textShadow: '2px 2px 4px #000'
-    }
-};
