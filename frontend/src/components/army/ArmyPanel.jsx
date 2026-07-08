@@ -5,6 +5,7 @@ import { useVillageStore } from '../../store/villageStore';
 import TrainTroopCard from './TrainTroopCard';
 import { TROOP_DEFS } from '../../game/gameConfig';
 import styles from './ArmyPanel.module.css';
+import toast from 'react-hot-toast';
 
 const CAMP_SPACE={ 1: 20, 2: 30, 3: 40, 4: 50 };
 
@@ -58,7 +59,7 @@ export default function ArmyPanel() {
         const def=TROOP_DEFS[troopType];
         if (!def) return;
         if (currentSpace + def.space > maxSpace) {
-            alert('Not enough housing space! Upgrade or build more Army Camps.');
+            toast.error('Not enough housing space! Upgrade or build more Army Camps.');
             return;
         }
         try {
@@ -72,7 +73,7 @@ export default function ArmyPanel() {
         try {
             await startUpgrade(troopType);
         } catch (err) {
-            alert(`Upgrade failed: ${err.message}`);
+            toast.error(`Upgrade failed: ${err.message}`);
         }
     };
 
@@ -88,7 +89,7 @@ export default function ArmyPanel() {
         try {
             await discard(troopType, 1);
         } catch (err) {
-            alert(`Discard failed: ${err.message}`);
+            toast.error(`Discard failed: ${err.message}`);
         }
     };
 

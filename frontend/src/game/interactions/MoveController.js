@@ -4,6 +4,7 @@ import { AssetLoader } from '../core/AssetLoader';
 import { useUiStore } from '../../store/uiStore';
 import { useVillageStore } from '../../store/villageStore';
 import { moveBuilding, getVillage } from '../../api/village';
+import toast from 'react-hot-toast';
 
 export class MoveController {
     constructor(viewport, scene) {
@@ -84,7 +85,7 @@ export class MoveController {
                 useVillageStore.getState().setVillage(newVillage);
             }
             catch (err) {
-                alert(`Move failed: ${err.message}`);
+                toast.error(`Move failed: ${err.message}`);
                 const realSprite=this.scene.buildings.get(bId);
                 if (realSprite) realSprite.container.visible=true;
             }

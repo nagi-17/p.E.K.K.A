@@ -4,6 +4,7 @@ import { AssetLoader } from '../core/AssetLoader';
 import { useUiStore } from '../../store/uiStore';
 import { placeBuilding, getVillage, getPlayerInfo } from '../../api/village';
 import { useVillageStore } from '../../store/villageStore';
+import toast from 'react-hot-toast';
 
 const PLACEMENT_DEFS={
     1001: { type: 'Town Hall', w: 4, h: 4 },
@@ -99,7 +100,7 @@ export class PlacementController {
 
             }
             catch (err) {
-                alert(`Placement failed: ${err.message}`);
+                toast.error(`Placement failed: ${err.message}`);
             }
         }
         else {
