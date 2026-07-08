@@ -11,7 +11,7 @@ function LoginPage() {
     return (
         <div className={styles.body}>
             <div className={styles.contain}>
-                {isLogin?<LoginForm />:<RegisterForm />}
+                {isLogin?<LoginForm />:<RegisterForm onSuccess={() => setIsLogin(true)} />}
                 <div onClick={tglReg} className={styles.tgl}>
                     {isLogin?<p>Register here</p>:<p>Login here</p>}
                 </div>

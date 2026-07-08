@@ -3,30 +3,23 @@ import { regUser } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from 'react-router-dom';
 import styles from './AuthForm.module.css';
+import toast from 'react-hot-toast';
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSuccess }) {
     const[username, setUsername]=useState('');
     const[email, setEmail]=useState('');
     const[pass, setPass]=useState('');
     const[error, setError]=useState(null);
-
-    const navigate=useNavigate();
-    const login=useAuthStore(function(state) {
-        return state.login;
-    });
 
     async function handleSubmit(event) {
         event.preventDefault();
         setError(null);
 
         try {
-            const data=await regUser(username, email, pass);
-            if (data.token!==undefined) {
-                login(data.token, data.player_id);
-                navigate('/');
-            }
-            else {
-                alert("Acc. has been created, please login")
+            await regUser(username, email, pass);
+            toast.success("Account created successfully! Please log in.");
+            if (onSuccess) {
+                onSuccess();
             }
         }
         catch(err) {
