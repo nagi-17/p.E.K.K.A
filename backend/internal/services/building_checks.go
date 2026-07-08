@@ -14,7 +14,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 	var bData *models.BuildingData
 	bData, err := models.GetBuildingDataByTypeLevel(ctx, bType, 1)
 	if err != nil {
-		return fmt.Errorf("Invalid building type")
+		return ErrInvalidBuildingType
 	}
 
 	townHallLevel, err := models.GetPlayerTownHallLevel(ctx, playerID)
@@ -28,7 +28,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 			return err
 		}
 		if townHallLevel < defData.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall is under levelled")
+			return ErrTownHallUnderLevel
 		}
 	case "Elixir Collector", "Pancake Machine":
 		resData, err := models.GetResBuildingData(ctx, bType, bData.BuildingLevel)
@@ -36,7 +36,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 			return err
 		}
 		if townHallLevel < resData.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall is under levelled")
+			return ErrTownHallUnderLevel
 		}
 	case "Elixir Storage", "Pancake Stack":
 		strgData, err := models.GetStrgBuildingData(ctx, bType, bData.BuildingLevel)
@@ -44,7 +44,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 			return err
 		}
 		if townHallLevel < strgData.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall is under levelled")
+			return ErrTownHallUnderLevel
 		}
 	case "Laboratory":
 		labData, err := models.GetLabData(ctx, bType, bData.BuildingLevel)
@@ -52,7 +52,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 			return err
 		}
 		if townHallLevel < labData.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall is under levelled")
+			return ErrTownHallUnderLevel
 		}
 	case "Army Camp":
 		campData, err := models.GetArmyCampData(ctx, bType, bData.BuildingLevel)
@@ -60,10 +60,10 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 			return err
 		}
 		if townHallLevel < campData.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall is under levelled")
+			return ErrTownHallUnderLevel
 		}
 	default:
-		return fmt.Errorf("Invalid building type")
+		return ErrInvalidBuildingType
 	}
 
 	tx, err := database.DB.Begin(ctx)
@@ -74,6 +74,9 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 
 	valid := models.IsCellValid(ctx, playerID, x, y, bData.Width, bData.Height, uuid.Nil)
 	if valid != nil {
+		if valid.Error() == "Cell is occupied" {
+			return ErrCellOccupied
+		}
 		return valid
 	}
 
@@ -84,11 +87,11 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 	elixir := playerRes.Elixir
 	pancakes := playerRes.Pancakes
 	if pancakes < bData.UpgradeCostPancakes {
-		return fmt.Errorf("Not enough pancakes")
+		return ErrNotEnoughPancakes
 	}
 
 	if elixir < bData.UpgradeCostElixir {
-		return fmt.Errorf("Not enough elixir")
+		return ErrNotEnoughElixir
 	}
 
 	allOwnedBuildings, err := models.GetOwnedBuildingData(ctx, playerID)
@@ -102,7 +105,7 @@ func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x i
 		}
 	}
 	if (count + 1) > bData.MaxQuantityAvailable {
-		return fmt.Errorf("All possible buildings of this type have already been placed")
+		return ErrBuildingLimitReached
 	}
 
 	var upgrade_complete_at *time.Time = nil
