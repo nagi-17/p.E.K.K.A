@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type TroopUpgradeReq struct {
@@ -29,7 +30,7 @@ func StartTroopUpgrade(w http.ResponseWriter, request *http.Request) {
 
 	err = models.StartTroopUpgrade(request.Context(), playerID, req.TroopType)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to start troop upgrade", http.StatusConflict)
 		return
 	}
 
@@ -59,7 +60,7 @@ func FinishTroopUpgrade(w http.ResponseWriter, request *http.Request) {
 
 	err = models.FinishTroopUpgrade(request.Context(), playerID, req.TroopType)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to finish troop upgrade", http.StatusConflict)
 		return
 	}
 

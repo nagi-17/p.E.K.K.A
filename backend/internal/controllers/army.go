@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type TrainAmryReq struct {
@@ -35,7 +36,7 @@ func TrainArmy(w http.ResponseWriter, request *http.Request) {
 
 	err = models.TrainArmy(request.Context(), playerID, req.TroopType, req.Quantity)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to train army", http.StatusConflict)
 		return
 	}
 
@@ -57,7 +58,7 @@ func GetArmy(w http.ResponseWriter, request *http.Request) {
 
 	army, err := models.GetTrainedArmy(request.Context(), playerID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to get army", http.StatusInternalServerError)
 		return
 	}
 
@@ -94,7 +95,7 @@ func DiscardArmy(w http.ResponseWriter, request *http.Request) {
 
 	err = models.DiscardTroops(request.Context(), playerID, req.TroopType, req.Quantity)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to discard troops", http.StatusConflict)
 		return
 	}
 

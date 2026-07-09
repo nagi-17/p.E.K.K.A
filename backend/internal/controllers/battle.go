@@ -6,6 +6,7 @@ import (
 
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
 	"github.com/nagi-17/p.E.K.K.A/internal/services"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type AttackRequest struct {
@@ -23,7 +24,7 @@ func MatchMakeHandler(w http.ResponseWriter, request *http.Request) {
 
 	defender, err := models.FindOpponent(request.Context(), playerID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to find opponent", http.StatusInternalServerError)
 		return
 	}
 
@@ -55,7 +56,7 @@ func AttackHandler(w http.ResponseWriter, request *http.Request) {
 
 	battleLog, err := services.Attack(request.Context(), playerID, req.DefenderID, req.Events)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to launch attack", http.StatusConflict)
 		return
 	}
 

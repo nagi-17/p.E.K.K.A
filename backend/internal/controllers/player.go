@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 func LoadPlayerInfo(w http.ResponseWriter, request *http.Request) {
@@ -24,7 +25,7 @@ func LoadPlayerInfo(w http.ResponseWriter, request *http.Request) {
 
 	playerInfo, err := models.GetPlayerInfoByID(request.Context(), playerIDuuid)
 	if err != nil {
-		http.Error(w, "Int. server error: could not fetch player profile", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Could not fetch player profile", http.StatusInternalServerError)
 		return
 	}
 

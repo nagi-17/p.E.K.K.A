@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
 	"github.com/nagi-17/p.E.K.K.A/internal/services"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type PlaceBuildingReq struct {
@@ -43,7 +43,7 @@ func LoadVillage(w http.ResponseWriter, request *http.Request) {
 
 	buildings, err := models.GetOwnedBuildingData(request.Context(), playerIDuuid)
 	if err != nil {
-		http.Error(w, "Couldn't load village(owned buildings)", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Couldn't load village(owned buildings)", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -76,12 +76,7 @@ func PlaceBuilding(w http.ResponseWriter, request *http.Request) {
 	}
 	err = services.PlaceNewBuilding(request.Context(), playerIDuuid, req.Btype, req.X, req.Y)
 	if err != nil {
-		if HelperErrorFunc(err) {
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-		http.Error(w, "Failed to place building-internal server error", http.StatusInternalServerError)
-
+		utils.HandleError(w, err, "Failed to place building", http.StatusInternalServerError)
 		return
 	}
 
@@ -126,11 +121,7 @@ func MoveBuildingHandler(w http.ResponseWriter, request *http.Request) {
 
 	err = models.MoveBuilding(request.Context(), buildingUUID, req.New_x, req.New_y)
 	if err != nil {
-		if err.Error() == "Cell is occupied" {
-			http.Error(w, "Cell is occupied", http.StatusConflict)
-			return
-		}
-		http.Error(w, "Failed to move building-int. server error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to move building", http.StatusInternalServerError)
 		return
 	}
 
@@ -165,7 +156,7 @@ func StartUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 
 	err = services.StartUpgrade(request.Context(), buildingUUID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to start upgrade", http.StatusConflict)
 		return
 	}
 
@@ -200,7 +191,7 @@ func FinishUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 
 	err = models.FinishUpgrade(request.Context(), buildingUUID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to finish upgrade", http.StatusConflict)
 		return
 	}
 
@@ -235,7 +226,7 @@ func CancelUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 
 	err = models.CancelUpgrade(request.Context(), buildingUUID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to cancel upgrade", http.StatusConflict)
 		return
 	}
 
@@ -245,10 +236,4 @@ func CancelUpgradeHandler(w http.ResponseWriter, request *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
-}
-
-func HelperErrorFunc(err error) bool {
-	return errors.Is(err, services.ErrInvalidBuildingType) || errors.Is(err, services.ErrTownHallUnderLevel) ||
-		errors.Is(err, services.ErrNotEnoughPancakes) || errors.Is(err, services.ErrNotEnoughElixir) ||
-		errors.Is(err, services.ErrBuildingLimitReached) || errors.Is(err, services.ErrCellOccupied)
 }

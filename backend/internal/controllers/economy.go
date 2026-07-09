@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 func CollectResourceHandler(w http.ResponseWriter, request *http.Request) {
@@ -31,7 +32,7 @@ func CollectResourceHandler(w http.ResponseWriter, request *http.Request) {
 
 	err = models.CollectResource(request.Context(), buildingUUID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		utils.HandleError(w, err, "Failed to collect resources", http.StatusConflict)
 		return
 	}
 
