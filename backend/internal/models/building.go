@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 func GetOwnedBuildingData(ctx context.Context, playerID uuid.UUID) ([]OwnedBuildingWithData, error) {
@@ -126,7 +127,7 @@ func MoveBuilding(ctx context.Context, ownedBuildingID uuid.UUID, newX int, newY
 func IsCellValid(ctx context.Context, playerID uuid.UUID, x int, y int, width int, height int, ignoreBuilding uuid.UUID) error {
 
 	if x < 0 || y < 0 || x+width > 40 || y+height > 40 {
-		return fmt.Errorf("Building is out of bounds")
+		return utils.NewUserError("Building is out of bounds")
 	}
 
 	allOwnedBuildings, err := GetOwnedBuildingData(ctx, playerID)
@@ -141,7 +142,7 @@ func IsCellValid(ctx context.Context, playerID uuid.UUID, x int, y int, width in
 		check_x := x < (allOwnedBuildings[i].PosX+allOwnedBuildings[i].Width) && (x+width) > allOwnedBuildings[i].PosX
 		check_y := y < (allOwnedBuildings[i].PosY+allOwnedBuildings[i].Height) && (y+height) > allOwnedBuildings[i].PosY
 		if check_x && check_y {
-			return fmt.Errorf("Cell is occupied")
+			return utils.NewUserError("Cell is occupied")
 		}
 	}
 	return nil
@@ -193,10 +194,10 @@ func FinishUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	}
 
 	if upgradeCompleteAt == nil {
-		return fmt.Errorf("Building is not under upgrade")
+		return utils.NewUserError("Building is not under upgrade")
 	}
 	if time.Now().Before(*upgradeCompleteAt) {
-		return fmt.Errorf("Upgrade is still going on")
+		return utils.NewUserError("Upgrade is still going on")
 	}
 
 	isInitialPlacement := lastCollectedAt != nil && lastCollectedAt.Unix() == 0
@@ -262,7 +263,7 @@ func CheckUpgrading(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	}
 	if finishTime != nil {
 		if time.Now().Before(*finishTime) {
-			return fmt.Errorf("Upgrade is still going on")
+			return utils.NewUserError("Upgrade is still going on")
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type OpponentData struct {
@@ -41,8 +42,8 @@ func FindOpponent(ctx context.Context, attackerID string) (*OpponentData, error)
 	var defender OpponentData
 	err = database.DB.QueryRow(ctx, query, attackerUUID, minSkill, maxSkill).Scan(&defender.PlayerID, &defender.Trophies, &defender.SkillPoints, &defender.Elixir, &defender.Pancakes)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			return nil, fmt.Errorf("Haha...SKILL ISSUE: No base found in your skill range")
+		if err == pgx.ErrNoRows {
+			return nil, utils.NewUserError("Haha...SKILL ISSUE: No base found in your skill range")
 		}
 		return nil, fmt.Errorf("Failed to fetch opponent base: %w", err)
 	}
@@ -73,7 +74,7 @@ func GetAttackingArmy(ctx context.Context, playerID uuid.UUID) ([]AttackingTroop
 	}
 
 	if len(army) == 0 {
-		return nil, fmt.Errorf("You have no troops to attack with")
+		return nil, utils.NewUserError("You have no troops to attack with")
 	}
 	return army, nil
 }

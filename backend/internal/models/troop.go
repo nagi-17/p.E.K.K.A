@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 type TroopData struct {
@@ -91,10 +92,10 @@ func StartTroopUpgrade(ctx context.Context, playerID string, troopType string) e
 	}
 
 	if playerTroopInfo.UpgradeCompleteAt != nil && playerTroopInfo.UpgradeCompleteAt.After(time.Now()) {
-		return fmt.Errorf("Upgrade is already in progress")
+		return utils.NewUserError("Upgrade is already in progress")
 	}
 	if playerTroopInfo.CurrentLevel == 4 {
-		return fmt.Errorf("Troop is maxed out")
+		return utils.NewUserError("Troop is maxed out")
 	}
 
 	var labLevel int
@@ -102,15 +103,15 @@ func StartTroopUpgrade(ctx context.Context, playerID string, troopType string) e
 	for i := 0; i < len(buildings); i++ {
 		if buildings[i].BuildingType == "Laboratory" {
 			err = CheckUpgrading(ctx, buildings[i].OwnedBuildingData.ID)
-			if err != nil {
-				return fmt.Errorf("Can't upgrade troop : Laboratory is under upgrade")
+			if err == nil {
+				return utils.NewUserError("Can't upgrade troop : Laboratory is under upgrade")
 			}
 			labLevel = buildings[i].BuildingLevel
 			break
 		}
 	}
 	if labLevel == 0 {
-		return fmt.Errorf("Can't upgrade troops: build laboratory")
+		return utils.NewUserError("Can't upgrade troops: build laboratory")
 	}
 
 	var labReq int
@@ -125,7 +126,7 @@ func StartTroopUpgrade(ctx context.Context, playerID string, troopType string) e
 	}
 
 	if labLevel < labReq {
-		return fmt.Errorf("%d level Lab req. to upgrade this troop", labReq)
+		return utils.NewUserError(fmt.Sprintf("%d level Lab req. to upgrade this troop", labReq))
 	}
 
 	playerStats, err := GetPlayerInfoByID(ctx, playerUUID)
@@ -134,7 +135,7 @@ func StartTroopUpgrade(ctx context.Context, playerID string, troopType string) e
 	}
 
 	if cost > playerStats.Elixir {
-		return fmt.Errorf("Insufficient elixir")
+		return utils.NewUserError("Insufficient elixir")
 	}
 
 	tx, err := database.DB.Begin(ctx)
@@ -181,7 +182,7 @@ func FinishTroopUpgrade(ctx context.Context, playerID string, troopType string) 
 
 	if playerTroopInfo.UpgradeCompleteAt.After(time.Now()) {
 		timeLeft := time.Until(*playerTroopInfo.UpgradeCompleteAt)
-		return fmt.Errorf("Upgrade is still under process - time remaining: %v", timeLeft.Round(time.Second))
+		return utils.NewUserError(fmt.Sprintf("Upgrade is still under process - time remaining: %v", timeLeft.Round(time.Second)))
 	}
 
 	nextLevel := playerTroopInfo.CurrentLevel + 1

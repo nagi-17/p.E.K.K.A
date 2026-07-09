@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 func PlaceNewBuilding(ctx context.Context, playerID uuid.UUID, bType string, x int, y int) error {
@@ -159,7 +160,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	}
 	if curr_upgrade_complete_time != nil {
 		if time.Now().Before(*curr_upgrade_complete_time) {
-			return fmt.Errorf("Building already under upgrade")
+			return utils.NewUserError("Building already under upgrade")
 		}
 	}
 
@@ -173,7 +174,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		return fmt.Errorf("Error in fetching player stats: %w", err)
 	}
 	if playerStats.Elixir < bData.UpgradeCostElixir || playerStats.Pancakes < bData.UpgradeCostPancakes {
-		return fmt.Errorf("Can't upgrade building: insufficient resources")
+		return utils.NewUserError("Can't upgrade building: insufficient resources")
 	}
 
 	townHallLevel, err := models.GetPlayerTownHallLevel(ctx, playerID)
@@ -184,7 +185,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 	switch bData.BuildingType {
 	case "Town Hall":
 		if bData.BuildingLevel >= 4 {
-			return fmt.Errorf("Town Hall is already maxed out")
+			return utils.NewUserError("Town Hall is already maxed out")
 		}
 
 		x, err := models.GetTownHallData(ctx, bData.BuildingLevel)
@@ -193,7 +194,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if playerStats.Skill_points < x.MinSkillPointsBeforeUpgrade {
-			return fmt.Errorf("Can't upgrade Town Hall: %d skill points required to upgrade", x.MinSkillPointsBeforeUpgrade)
+			return utils.NewUserError(fmt.Sprintf("Can't upgrade Town Hall: %d skill points required to upgrade", x.MinSkillPointsBeforeUpgrade))
 		}
 
 	case "Cannon", "Archer Tower", "Mortar":
@@ -203,7 +204,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
-			return fmt.Errorf("Building is already maxed out")
+			return utils.NewUserError("Building is already maxed out")
 		}
 
 		nextDef, err := models.GetDefBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
@@ -211,7 +212,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Error in fetching next level stats: %w", err)
 		}
 		if townHallLevel < nextDef.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextDef.UnlockTownHallLevel)
+			return utils.NewUserError(fmt.Sprintf("Town Hall level %d required to upgrade this building", nextDef.UnlockTownHallLevel))
 		}
 
 	case "Elixir Collector", "Pancake Machine":
@@ -221,7 +222,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
-			return fmt.Errorf("Building is already maxed out")
+			return utils.NewUserError("Building is already maxed out")
 		}
 
 		nextRes, err := models.GetResBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
@@ -229,7 +230,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Error in fetching next level stats: %w", err)
 		}
 		if townHallLevel < nextRes.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextRes.UnlockTownHallLevel)
+			return utils.NewUserError(fmt.Sprintf("Town Hall level %d required to upgrade this building", nextRes.UnlockTownHallLevel))
 		}
 
 	case "Elixir Storage", "Pancake Stack":
@@ -239,7 +240,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
-			return fmt.Errorf("Building is already maxed out")
+			return utils.NewUserError("Building is already maxed out")
 		}
 
 		nextStrg, err := models.GetStrgBuildingData(ctx, bData.BuildingType, bData.BuildingLevel+1)
@@ -247,7 +248,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Error in fetching next level stats: %w", err)
 		}
 		if townHallLevel < nextStrg.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextStrg.UnlockTownHallLevel)
+			return utils.NewUserError(fmt.Sprintf("Town Hall level %d required to upgrade this building", nextStrg.UnlockTownHallLevel))
 		}
 
 	case "Laboratory":
@@ -257,7 +258,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
-			return fmt.Errorf("Building is already maxed out")
+			return utils.NewUserError("Building is already maxed out")
 		}
 
 		nextLab, err := models.GetLabData(ctx, bData.BuildingType, bData.BuildingLevel+1)
@@ -265,7 +266,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Error in fetching next level stats: %w", err)
 		}
 		if townHallLevel < nextLab.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextLab.UnlockTownHallLevel)
+			return utils.NewUserError(fmt.Sprintf("Town Hall level %d required to upgrade this building", nextLab.UnlockTownHallLevel))
 		}
 
 	case "Army Camp":
@@ -275,7 +276,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 		}
 
 		if bData.BuildingLevel == x.MaxPossibleUpgradeLevel {
-			return fmt.Errorf("Building is already maxed out")
+			return utils.NewUserError("Building is already maxed out")
 		}
 
 		nextCamp, err := models.GetArmyCampData(ctx, bData.BuildingType, bData.BuildingLevel+1)
@@ -283,7 +284,7 @@ func StartUpgrade(ctx context.Context, ownedBuildingID uuid.UUID) error {
 			return fmt.Errorf("Error in fetching next level stats: %w", err)
 		}
 		if townHallLevel < nextCamp.UnlockTownHallLevel {
-			return fmt.Errorf("Town Hall level %d required to upgrade this building", nextCamp.UnlockTownHallLevel)
+			return utils.NewUserError(fmt.Sprintf("Town Hall level %d required to upgrade this building", nextCamp.UnlockTownHallLevel))
 		}
 	}
 

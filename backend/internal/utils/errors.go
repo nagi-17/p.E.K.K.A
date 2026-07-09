@@ -14,6 +14,10 @@ func (e *UserError) Error() string {
 	return e.Message
 }
 
+func NewUserError(message string) error {
+	return &UserError{Message: message}
+}
+
 func HandleError(w http.ResponseWriter, err error, defaultMsg string, defaultStatus int) {
 	if err == nil {
 		return

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 const trophyWinGain = 30
@@ -324,8 +325,8 @@ func Attack(ctx context.Context, attackerID string, defenderID string, events []
 		return nil, fmt.Errorf("Error in parsing defender id: %w", err)
 	}
 
-	if attackerUUID == defenderUUID {
-		return nil, fmt.Errorf("You cannot attack yourself")
+	if attackerID == defenderID {
+		return nil, utils.NewUserError("You cannot attack yourself")
 	}
 
 	defenderStats, err := models.GetPlayerInfoByID(ctx, defenderUUID)
@@ -334,7 +335,7 @@ func Attack(ctx context.Context, attackerID string, defenderID string, events []
 	}
 
 	if defenderStats.Shield_End_Time != nil && defenderStats.Shield_End_Time.After(time.Now()) {
-		return nil, fmt.Errorf("Defender is currently under shield")
+		return nil, utils.NewUserError("Defender is currently under shield")
 	}
 
 	attackerStats, err := models.GetPlayerInfoByID(ctx, attackerUUID)

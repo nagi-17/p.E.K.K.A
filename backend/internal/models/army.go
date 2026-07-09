@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nagi-17/p.E.K.K.A/internal/database"
+	"github.com/nagi-17/p.E.K.K.A/internal/utils"
 )
 
 func TrainArmy(ctx context.Context, playerID string, troopType string, quantity int) error {
@@ -82,7 +83,7 @@ func TrainArmy(ctx context.Context, playerID string, troopType string, quantity 
 
 	spaceReq := quantity * space
 	if currSpace+spaceReq > maxSpace {
-		return fmt.Errorf("Insufficient housing space")
+		return utils.NewUserError("Insufficient housing space")
 	}
 
 	for i := 0; i < len(allTrainedTroops); i++ {
@@ -187,11 +188,11 @@ func DiscardTroops(ctx context.Context, playerID string, troopType string, quant
 	query2 := `SELECT quantity FROM trained_troop WHERE player_id = $1 AND troop_data_id = $2`
 	err = database.DB.QueryRow(ctx, query2, playerUUID, troopDataID).Scan(&currentQuantity)
 	if err != nil {
-		return fmt.Errorf("No troops of this type trained")
+		return utils.NewUserError("No troops of this type trained")
 	}
 
 	if currentQuantity < quantity {
-		return fmt.Errorf("Cannot discard more troops than you have trained")
+		return utils.NewUserError("Cannot discard more troops than you have trained")
 	}
 
 	newQuantity := currentQuantity - quantity
