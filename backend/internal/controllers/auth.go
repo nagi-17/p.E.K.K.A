@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/nagi-17/p.E.K.K.A/internal/models"
 	"github.com/nagi-17/p.E.K.K.A/internal/services"
@@ -61,7 +63,13 @@ func Register(w http.ResponseWriter, request *http.Request) {
 
 	player_ID, err := models.RegisterNewPlayer(request.Context(), reg_req.Username, reg_req.Email, hashedpassword)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Error registering new player: %v", err)
+
+		if strings.Contains(err.Error(), "duplicate key value") {
+			http.Error(w, "Username or email already exists", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to create account", http.StatusInternalServerError)
+		}
 		return
 	}
 
