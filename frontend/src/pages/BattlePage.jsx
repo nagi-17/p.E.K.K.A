@@ -205,6 +205,24 @@ export default function BattlePage() {
             );
 
             scene.loadDefenderVillage(opponentBuildings);
+            
+            const savedStr = localStorage.getItem('activeBattle');
+            if (savedStr) {
+                try {
+                    const saved = JSON.parse(savedStr);
+                    if (saved.startTimestamp) {
+                        const elapsedSecs = Math.floor((Date.now() - saved.startTimestamp) / 1000);
+                        const elapsedTicks = Math.max(0, elapsedSecs * 60);
+                        const savedEvents = saved.deploymentEvents || [];
+                        if (elapsedTicks > 0) {
+                            scene.fastForward(elapsedTicks, savedEvents);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fast-forward saved battle", e);
+                }
+            }
+
             viewport.addChild(scene.container);
             battleSceneRef.current=scene;
             scene.deployRemaining=deployRemaining;

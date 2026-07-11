@@ -115,8 +115,26 @@ export class BattleScene {
     }
 
     deployTroop(type, pixelX, pixelY, gridX, gridY) {
+        const troop = this.spawnTroopSprite(type, pixelX, pixelY);
+        if (!troop) return;
+
+        const tick = this.isBattleActive ? this.elapsedTicks : 0;
+        this.deploymentEvents.push({
+            troop_type: type,
+            quantity: 1,
+            drop_x: gridX,
+            drop_y: gridY,
+            tick: tick
+        });
+
+        if (this.onTroopDeployedCallback) {
+            this.onTroopDeployedCallback(type, gridX, gridY);
+        }
+    }
+
+    spawnTroopSprite(type, pixelX, pixelY) {
         const def=TROOP_DEFS[type];
-        if (!def) return;
+        if (!def) return null;
 
         const level=1;
         const stats=def.levels[level];
@@ -131,18 +149,40 @@ export class BattleScene {
 
         this.troops.push(troop);
         this.container.addChild(troop.container);
+        return troop;
+    }
 
-        const tick = this.isBattleActive ? this.elapsedTicks : 0;
-        this.deploymentEvents.push({
-            troop_type: type,
-            quantity: 1,
-            drop_x: gridX,
-            drop_y: gridY,
-            tick: tick
-        });
+    fastForward(savedTicks, savedEvents) {
+        if (savedTicks <= 0) return;
+        
+        this.isBattleActive = true;
+        this.deploymentEvents = savedEvents || [];
 
-        if (this.onTroopDeployedCallback) {
-            this.onTroopDeployedCallback(type, gridX, gridY);
+        for (let tick = 0; tick < savedTicks; tick++) {
+            const eventsThisTick = this.deploymentEvents.filter(e => e.tick === tick);
+            eventsThisTick.forEach(e => {
+                const pixelX = (e.drop_x + 0.5) * gameConfig.TILE_SIZE;
+                const pixelY = (e.drop_y + 0.5) * gameConfig.TILE_SIZE;
+                this.spawnTroopSprite(e.troop_type, pixelX, pixelY);
+            });
+
+            this.elapsedTicks = tick + 1;
+            const deltaTime = 1; 
+            
+            this.updateProjectiles(deltaTime);
+            this.updateTroops(deltaTime);
+            this.updateDefenses(deltaTime);
+            
+            let buildingsLeft = false;
+            for (const [id, stats] of this.buildingStats) {
+                if (stats.currentHP > 0) {
+                    buildingsLeft = true;
+                    break;
+                }
+            }
+            if (!buildingsLeft) {
+                break;
+            }
         }
     }
 
