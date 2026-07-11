@@ -39,7 +39,50 @@ export default function BattlePage() {
     matchStateRef.current=matchState;
 
     useEffect(() => {
-        async function checkPlayerArmy() {
+        async function initialize() {
+            const savedStr = localStorage.getItem('activeBattle');
+            if (savedStr) {
+                try {
+                    const saved = JSON.parse(savedStr);
+                    setOpponent(saved.opponent);
+                    setOpponentBuildings(saved.opponentBuildings);
+                    setDeployRemaining(saved.deployRemaining);
+                    
+                    const keys = Object.keys(saved.deployRemaining).filter(k => saved.deployRemaining[k] > 0);
+                    setHasTrainedArmy(keys.length > 0);
+                    if (keys.length > 0) {
+                        setSelectedTroopType(keys[0]);
+                    }
+
+                    if (saved.startTimestamp) {
+                        const elapsed = Math.floor((Date.now() - saved.startTimestamp) / 1000);
+                        const remaining = Math.max(0, 180 - elapsed);
+                        setTimer(remaining);
+                        setMatchState('battle');
+                        
+                        timerIntervalRef.current=setInterval(() => {
+                            setTimer(prev => {
+                                if (prev <= 1) {
+                                    clearInterval(timerIntervalRef.current);
+                                    if (battleSceneRef.current) {
+                                        battleSceneRef.current.endBattle();
+                                    }
+                                    return 0;
+                                }
+                                return prev-1;
+                            });
+                        }, 1000);
+                    } else {
+                        setMatchState('found');
+                    }
+                    return;
+                }
+                catch (temp) {
+                    console.error("Failed to parse saved battle", temp);
+                    localStorage.removeItem('activeBattle');
+                }
+            }
+            
             setLoading(true);
             try {
                 const trained=await getArmy();
@@ -65,7 +108,7 @@ export default function BattlePage() {
                 setLoading(false);
             }
         }
-        checkPlayerArmy();
+        initialize();
 
         return () => {
             if (pixiAppRef.current) {
