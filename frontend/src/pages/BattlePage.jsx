@@ -90,6 +90,15 @@ export default function BattlePage() {
             setOpponent(opp);
             setOpponentBuildings(buildings);
             setMatchState('found');
+
+            const battleData = {
+                opponent: opp,
+                opponentBuildings: buildings,
+                deployRemaining: deployRemaining,
+                startTimestamp: null,
+                deploymentEvents: []
+            };
+            localStorage.setItem('activeBattle', JSON.stringify(battleData));
         }
         catch (err) {
             setError(err.message || 'Failed to locate opponent.');
@@ -209,12 +218,30 @@ export default function BattlePage() {
                 setSelectedTroopType(available.length > 0 ? available[0] : null);
             }
             
+            const saved = localStorage.getItem('activeBattle');
+            if (saved) {
+                const data = JSON.parse(saved);
+                data.deployRemaining = updated;
+                if (battleSceneRef.current) {
+                    data.deploymentEvents = battleSceneRef.current.getDeploymentEvents();
+                }
+                localStorage.setItem('activeBattle', JSON.stringify(data));
+            }
+
             return updated;
         });
     };
 
     const triggerBackendAttack=(gridX, gridY) => {
         setMatchState('battle');
+        const now = Date.now();
+
+        const saved = localStorage.getItem('activeBattle');
+        if (saved) {
+            const data = JSON.parse(saved);
+            data.startTimestamp = now;
+            localStorage.setItem('activeBattle', JSON.stringify(data));
+        }
 
         timerIntervalRef.current=setInterval(() => {
             setTimer(prev => {
@@ -253,6 +280,7 @@ export default function BattlePage() {
         const finalRes=finalResultRef.current;
         setBattleResult(finalRes);
         setMatchState('ended');
+        localStorage.removeItem('activeBattle');
     };
 
     const handleSkipVisuals=() => {
@@ -364,7 +392,10 @@ export default function BattlePage() {
 
                             <div className={styles.actionRow}>
                                 {matchState === 'found' ? (
-                                    <button className={styles.surrenderBtn} onClick={() => navigate('/')}>
+                                    <button className={styles.surrenderBtn} onClick={() => {
+                                        localStorage.removeItem('activeBattle');
+                                        navigate('/');
+                                    }}>
                                         Surrender</button>
                                 ) : (
                                     <button className={styles.skipBtn} onClick={handleSkipVisuals}>
