@@ -60,6 +60,7 @@ export default function BattlePage() {
                         setTimer(remaining);
                         setMatchState('battle');
                         
+                        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
                         timerIntervalRef.current=setInterval(() => {
                             setTimer(prev => {
                                 if (prev <= 1) {
@@ -111,6 +112,7 @@ export default function BattlePage() {
         initialize();
 
         return () => {
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
             if (pixiAppRef.current) {
                 pixiAppRef.current.destroy(true, { children: true });
                 pixiAppRef.current=null;
@@ -304,6 +306,7 @@ export default function BattlePage() {
             localStorage.setItem('activeBattle', JSON.stringify(data));
         }
 
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         timerIntervalRef.current=setInterval(() => {
             setTimer(prev => {
                 if (prev <= 1) {
